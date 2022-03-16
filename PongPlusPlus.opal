@@ -10,50 +10,52 @@ new <Vector> RESOLUTION = Vector(1280, 720);
 
 new bool DEBUG_MODE = False;
 
-new tuple FG              = (255, 255, 255),
-          BG              = (  0,   0,   0),
-          KEYS            = (K_SPACE, K_UP, K_w, K_RETURN),
-          HITBOX_COLOR    = (255, 0, 0),
-          INFO_COLOR      = (0, 0, 255),
-          SAFE_ZONE_COLOR = (0, 255, 0);
+new tuple FG                     = (255, 255, 255),
+          BG                     = (  0,   0,   0),
+          KEYS                   = (K_SPACE, K_UP, K_w, K_RETURN),
+          HITBOX_COLOR           = (255,   0,   0),
+          INFO_COLOR             = (  0,   0, 255),
+          SAFE_ZONE_COLOR        = (  0, 255,   0),
+          FLYING_SAFE_ZONE_COLOR = (255, 255,   0);
 
 new <Vector> GRAVITY            = Vector(0, 0.6),
              PAD_SIZE           = Vector(15, 100),
              PLAYER_VELOCITY    = Vector(5),
              OBSTACLE_SAFE_ZONE = Vector(100, 50);
 
-new int PLAYER_SIZE          = 20,
-        PAD_WALL_DISTANCE    = 40,
-        FRAMERATE            = 60,
-        PAD_MOVE_SPEED_MLT   = 3,
-        TOLERANCE            = 2,
-        ALPHA_CHANGE         = 100,
-        BONUS_ALPHA_CHANGE   = 25,
-        LIFESPAN_DECREASE    = 3,
-        PARTICLE_SIZE        = 1,
-        MIN_PARTICLE_QTY     = 25,
-        MAX_PARTICLE_QTY     = 50,
-        DAY_CYCLE            = 7200,
-        MIN_OBSTACLE_SIZE    = 15,
-        MAX_OBSTACLE_SIZE    = 40,
-        MIN_OBSTACLE_LIFE    = 300,
-        MAX_OBSTACLE_LIFE    = 900,
-        OBSTACLE_START_ALPHA = 30,
-        OBSTACLE_DELTA_ALPHA = 5,
-        PLAYER_COUNT_OBST    = 10,
-        PLAYER_SAFE_ZONE     = 40,
-        MOD_INCREMENT_DIFF   = 5,
-        MIN_FLYINGOBST_SPEED = 5,
-        MAX_FLYINGOBST_SPEED = 15,
-        START_DIFFICULTY     = 0,
-        DEBUG_LINES_WIDTH    = 1,
-        DEBUG_VELOCITY_LEN   = 40,
-        BONUS_SIZE           = 20,
-        BONUS_LIFE           = 150,
-        BONUS_EFFECT_DUR     = 200,
-        PLAYER_COUNT_BONUS   = 20,
-        BONUS_PAD_DISTANCE   = 100,
-        BONUS_PAD_Y_DIST     = 50;
+new int PLAYER_SIZE           = 20,
+        PAD_WALL_DISTANCE     = 40,
+        FRAMERATE             = 60,
+        PAD_MOVE_SPEED_MLT    = 3,
+        TOLERANCE             = 2,
+        ALPHA_CHANGE          = 100,
+        BONUS_ALPHA_CHANGE    = 25,
+        LIFESPAN_DECREASE     = 3,
+        PARTICLE_SIZE         = 1,
+        MIN_PARTICLE_QTY      = 25,
+        MAX_PARTICLE_QTY      = 50,
+        DAY_CYCLE             = 7200,
+        MIN_OBSTACLE_SIZE     = 15,
+        MAX_OBSTACLE_SIZE     = 40,
+        MIN_OBSTACLE_LIFE     = 300,
+        MAX_OBSTACLE_LIFE     = 900,
+        OBSTACLE_START_ALPHA  = 30,
+        OBSTACLE_DELTA_ALPHA  = 5,
+        PLAYER_COUNT_OBST     = 10,
+        PLAYER_SAFE_ZONE      = 40,
+        MOD_INCREMENT_DIFF    = 5,
+        MIN_FLYINGOBST_SPEED  = 5,
+        MAX_FLYINGOBST_SPEED  = 15,
+        START_DIFFICULTY      = 0,
+        DEBUG_LINES_WIDTH     = 1,
+        DEBUG_VELOCITY_LEN    = 40,
+        BONUS_SIZE            = 20,
+        BONUS_LIFE            = 150,
+        BONUS_EFFECT_DUR      = 200,
+        PLAYER_COUNT_BONUS    = 0,
+        BONUS_PAD_DISTANCE    = 100,
+        BONUS_PAD_Y_DIST      = 50,
+        FLYING_SAFE_ZONE_SIZE = 100;
 
 new float JUMP_VELOCITY                = 10,
           PARTICLE_VELOCITY_MULTIPLIER = 0.98,
@@ -84,7 +86,7 @@ new class Pad {
             if isLeft {
                 this.pos = Vector(PAD_WALL_DISTANCE, RESOLUTION.y // 2 - size.y // 2);
             } else {
-                this.pos = Vector(RESOLUTION.x - PAD_WALL_DISTANCE, RESOLUTION.y // 2 - size.y // 2);
+                this.pos = Vector(RESOLUTION.x - PAD_WALL_DISTANCE - size.x, RESOLUTION.y // 2 - size.y // 2);
             }
         } else {
             this.pos = pos;
@@ -106,7 +108,7 @@ new class Pad {
     }
 
     new method reset() {
-        this.__moveTo(RESOLUTION.y // 2 - this.__size.y // 2);
+        this.pos.y = RESOLUTION.y // 2 - this.__size.y // 2;
     }
 
     new method update() {
@@ -122,12 +124,28 @@ new class Pad {
 
         if DEBUG_MODE {
             if this.isLeft {
+                new dynamic tmp = Vector(this.pos.x + this.__size.x - TOLERANCE, this.pos.y);
+
+                if this.__size == PAD_SIZE {
+                    graphics.fastRectangle(
+                        tmp, Vector(TOLERANCE + FLYING_SAFE_ZONE_SIZE, this.__size.y),
+                        FLYING_SAFE_ZONE_COLOR, DEBUG_LINES_WIDTH
+                    );
+                }
+
                 graphics.fastRectangle(
-                    Vector(this.pos.x + this.__size.x - TOLERANCE, this.pos.y),
-                    Vector(TOLERANCE * 2, this.__size.y),
+                    tmp, Vector(TOLERANCE * 2, this.__size.y),
                     HITBOX_COLOR, DEBUG_LINES_WIDTH
                 );
             } else {
+                if this.__size == PAD_SIZE {
+                    graphics.fastRectangle(
+                        Vector(this.pos.x - FLYING_SAFE_ZONE_SIZE, this.pos.y),
+                        Vector(FLYING_SAFE_ZONE_SIZE, this.__size.y),
+                        FLYING_SAFE_ZONE_COLOR, DEBUG_LINES_WIDTH
+                    );
+                }
+
                 graphics.fastRectangle(
                     Vector(this.pos.x - TOLERANCE, this.pos.y),
                     Vector(TOLERANCE * 2, this.__size.y),
@@ -153,14 +171,14 @@ new class Pad {
         if this.isLeft {
             new dynamic tmp = this.pos.x + this.__size.x;
             if playerPosX in Utils.tolerance(tmp, TOLERANCE) and (playerPosY in r or playerPosY + PLAYER_SIZE in r) {
-                this.__moveTo(randint(0, RESOLUTION.y - this.__size.y));
+                this.__moveTo(randint(OBSTACLE_SAFE_ZONE.y, RESOLUTION.y - OBSTACLE_SAFE_ZONE.y - this.__size.y));
                 return True;
             }
         } else {
             playerPosX += PLAYER_SIZE;
 
             if playerPosX in Utils.tolerance(this.pos.x, TOLERANCE) and (playerPosY in r or playerPosY + PLAYER_SIZE in r) {
-                this.__moveTo(randint(0, RESOLUTION.y - this.__size.y));
+                this.__moveTo(randint(OBSTACLE_SAFE_ZONE.y, RESOLUTION.y - OBSTACLE_SAFE_ZONE.y - this.__size.y));
                 return True;
             }
         }
@@ -355,6 +373,55 @@ new class Game {
         return tmp;
     }
 
+    new method isPlayerInFlyingSafeLeft() {
+        return (this.leftPad.pos.x < this.player.pos.x < this.leftPad.pos.x + FLYING_SAFE_ZONE_SIZE and
+                this.leftPad.pos.y < this.player.pos.y < this.leftPad.pos.y + PAD_SIZE) or
+               (this.leftPad.pos.x < this.player.pos.x + PLAYER_SIZE < this.leftPad.pos.x + FLYING_SAFE_ZONE_SIZE and
+                this.leftPad.pos.y < this.player.pos.y + PLAYER_SIZE < this.leftPad.pos.y + PAD_SIZE);
+    }
+
+    new method isPlayerInFlyingSafeRight() {
+        return (this.rightPad.pos.x - FLYING_SAFE_ZONE_SIZE < this.player.pos.x < this.rightPad.pos.x and
+                this.rightPad.pos.y < this.player.pos.y < this.rightPad.pos.y + PAD_SIZE) or
+               (this.rightPad.pos.x - FLYING_SAFE_ZONE_SIZE < this.player.pos.x + PLAYER_SIZE < this.rightPad.pos.x and
+                this.rightPad.pos.y < this.player.pos.y + PLAYER_SIZE < this.rightPad.pos.y + PAD_SIZE);
+    }
+
+    new method getFlyingSafePos() {
+        new dynamic mode = randint(0, 3);
+
+        match mode {
+            case FlyingObstacle.LEFT {
+                if (this.customLeftPad is not None and this.customRightPad is not None) or this.isPlayerInFlyingSafeLeft() {
+                    if randint(0, 1) == 0 {
+                        return Vector(0, randint(OBSTACLE_SAFE_ZONE.y, this.leftPad.pos.y)), mode;
+                    } else {
+                        return Vector(0, randint(this.leftPad.pos.y + PAD_SIZE.y, RESOLUTION.y - OBSTACLE_SAFE_ZONE.y)), mode;
+                    }
+                } else {
+                    return Vector(0, randint(OBSTACLE_SAFE_ZONE.y, RESOLUTION.y - OBSTACLE_SAFE_ZONE.y)), mode;
+                }
+            }
+            case FlyingObstacle.RIGHT {
+                if (this.customLeftPad is not None and this.customRightPad is not None) or this.isPlayerInFlyingSafeRight() {
+                    if randint(0, 1) == 0 {
+                        return Vector(RESOLUTION.x, randint(OBSTACLE_SAFE_ZONE.y, this.rightPad.pos.y)), mode;
+                    } else {
+                        return Vector(RESOLUTION.x, randint(this.rightPad.pos.y + PAD_SIZE.y, RESOLUTION.y - OBSTACLE_SAFE_ZONE.y)), mode;
+                    }
+                } else {
+                    return Vector(RESOLUTION.x, randint(OBSTACLE_SAFE_ZONE.y, RESOLUTION.y - OBSTACLE_SAFE_ZONE.y)), mode;
+                }
+            }
+            case FlyingObstacle.TOP {
+                return Vector(randint(OBSTACLE_SAFE_ZONE.x, RESOLUTION.x - OBSTACLE_SAFE_ZONE.x), 0), mode;
+            }
+            case FlyingObstacle.BOTTOM {
+                return Vector(randint(OBSTACLE_SAFE_ZONE.x, RESOLUTION.x - OBSTACLE_SAFE_ZONE.x), RESOLUTION.y), mode;
+            }
+        }
+    }
+
     new method __jump(event) {
         global DEBUG_MODE;
 
@@ -391,89 +458,90 @@ new class Game {
             this.__reset();
         }
 
-        if this.customLeftPad is not None and this.customRightPad is not None {
-            if this.__customPadCnt == 0 {
-                this.player.rainbowOff();
-                this.__resetCustomPads();
-            } else {
-                this.customLeftPad.update();
-                this.customRightPad.update();
+        if this.player.playing {
+            if this.customLeftPad is not None and this.customRightPad is not None {
+                if this.__customPadCnt == 0 {
+                    this.player.rainbowOff();
+                    this.__resetCustomPads();
+                } else {
+                    this.customLeftPad.update();
+                    this.customRightPad.update();
 
-                if this.customLeftPad.collides(this.player) or this.customRightPad.collides(this.player) {
+                    if this.customLeftPad.collides(this.player) or this.customRightPad.collides(this.player) {
+                        this.__invert();
+                    }
+
+                    this.__customPadCnt--;
+                }
+            } else {
+                this.leftPad.update();
+                this.rightPad.update();
+
+                if this.leftPad.collides(this.player) or this.rightPad.collides(this.player) {
                     this.__invert();
                 }
 
-                this.__customPadCnt--;
-            }
-        } else {
-            this.leftPad.update();
-            this.rightPad.update();
-
-            if this.leftPad.collides(this.player) or this.rightPad.collides(this.player) {
-                this.__invert();
-            }
-
-            if this.bonus is not None {
-                if not this.bonus.isAlive() {
-                    this.bonus = None;
-                } else {
-                    this.bonus.update();
-
-                    if this.bonus.collides(this.player) {
+                if this.bonus is not None {
+                    if not this.bonus.isAlive() {
                         this.bonus = None;
+                    } else {
+                        this.bonus.update();
 
-                        this.__customPadCnt = BONUS_EFFECT_DUR;
-                        new dynamic xPos = this.player.pos.x + PLAYER_SIZE // 2;
+                        if this.bonus.collides(this.player) {
+                            this.bonus = None;
 
-                        this.player.pos = CENTER.copy();
+                            this.__customPadCnt = BONUS_EFFECT_DUR;
+                            new dynamic xPos = this.player.pos.x + PLAYER_SIZE // 2;
 
-                        this.customLeftPad  = Pad( True, Vector(CENTER.x - BONUS_PAD_DISTANCE - BONUS_PAD_SIZE.x, BONUS_PAD_Y_DIST), BONUS_PAD_SIZE);
-                        this.customRightPad = Pad(False, Vector(CENTER.x + BONUS_PAD_DISTANCE, BONUS_PAD_Y_DIST), BONUS_PAD_SIZE);
+                            this.player.pos = CENTER.copy();
 
-                        this.__alphaChange = BONUS_ALPHA_CHANGE;
-                        this.player.rainbowOn();
+                            this.customLeftPad  = Pad( True, Vector(CENTER.x - BONUS_PAD_DISTANCE - BONUS_PAD_SIZE.x, BONUS_PAD_Y_DIST), BONUS_PAD_SIZE);
+                            this.customRightPad = Pad(False, Vector(CENTER.x + BONUS_PAD_DISTANCE, BONUS_PAD_Y_DIST), BONUS_PAD_SIZE);
 
-                        mixer.Sound.play(this.__bonusSound);
+                            this.__alphaChange = BONUS_ALPHA_CHANGE;
+                            this.player.rainbowOn();
+
+                            mixer.Sound.play(this.__bonusSound);
+                        }
+                    }
+                } elif this.player.count >= PLAYER_COUNT_BONUS and this.player.playing {
+                    if randint(0, 2500) < 2500 {
+                        this.bonus = Bonus(this.getSafePos());
                     }
                 }
-            } elif this.player.count >= PLAYER_COUNT_BONUS and this.player.playing {
-                if randint(0, 2500) < 1 {
-                    this.bonus = Bonus(this.getSafePos());
+            }
+
+            if this.player.count >= PLAYER_COUNT_OBST {
+                if this.player.count != this.__lastCount and this.player.count % MOD_INCREMENT_DIFF == 0 {
+                    this.__lastCount = this.player.count;
+                    this.__difficulty++;
+                }
+
+                if randint(0, 1000) < this.__difficulty {
+                    this.obstacles.append(Obstacle(this.getSafePos()));
+                } elif randint(0, 1000) < this.__difficulty {
+                    this.obstacles.append(FlyingObstacle(*this.getFlyingSafePos()));
                 }
             }
-        }
 
-        if (not this.player.playing) and (not this.player.explosion.isAlive()) {
+            this.obstacles = [obstacle for obstacle in this.obstacles if obstacle.isAlive()];
+
+            for obstacle in this.obstacles {
+                obstacle.update();
+
+                if obstacle.collides(this.player) {
+                    this.player.dead = True;
+                    return;
+                }
+            }
+        } elif not this.player.explosion.isAlive() {
             graphics.simpleText("JUMP TO START", START_TEXT_POS, FG, True, True);
-        }
-
-        if this.player.count >= PLAYER_COUNT_OBST and this.player.playing {
-            if this.player.count != this.__lastCount and this.player.count % MOD_INCREMENT_DIFF == 0 {
-                this.__lastCount = this.player.count;
-                this.__difficulty++;
-            }
-
-            if randint(0, 1000) < this.__difficulty {
-                this.obstacles.append(Obstacle(this.getSafePos()));
-            } elif randint(0, 1000) < this.__difficulty {
-                this.obstacles.append(FlyingObstacle(randint(0, 4)));
-            }
         }
 
         this.__dayCounter++;
         if this.__dayCounter == DAY_CYCLE {
             this.__dayCounter = 0;
             unchecked: BG, FG = FG, BG;
-        }
-
-        this.obstacles = [obstacle for obstacle in this.obstacles if obstacle.isAlive()];
-
-        for obstacle in this.obstacles {
-            obstacle.update();
-
-            if obstacle.collides(this.player) {
-                this.player.dead = True;
-            }
         }
 
         this.player.update();

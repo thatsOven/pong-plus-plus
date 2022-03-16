@@ -3,21 +3,8 @@ new class FlyingObstacle : Obstacle {
         LEFT, RIGHT, TOP, BOTTOM
     }
 
-    new method __init__(mode) {
-        match mode {
-            case FlyingObstacle.LEFT {
-                this.pos = Vector(0, randint(OBSTACLE_SAFE_ZONE.y, RESOLUTION.y - OBSTACLE_SAFE_ZONE.y));
-            }
-            case FlyingObstacle.RIGHT {
-                this.pos = Vector(RESOLUTION.x, randint(OBSTACLE_SAFE_ZONE.y, RESOLUTION.y - OBSTACLE_SAFE_ZONE.y));
-            }
-            case FlyingObstacle.TOP {
-                this.pos = Vector(randint(OBSTACLE_SAFE_ZONE.x, RESOLUTION.x - OBSTACLE_SAFE_ZONE.x), 0);
-            }
-            case FlyingObstacle.BOTTOM {
-                this.pos = Vector(randint(OBSTACLE_SAFE_ZONE.x, RESOLUTION.x - OBSTACLE_SAFE_ZONE.x), RESOLUTION.y);
-            }
-        }
+    new method __init__(pos, mode) {
+        this.pos = pos;
 
         new dynamic tmp = randint(MIN_OBSTACLE_SIZE, MAX_OBSTACLE_SIZE);
         this.size     = Vector(tmp, tmp);
