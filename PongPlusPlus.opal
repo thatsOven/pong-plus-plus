@@ -1,5 +1,3 @@
-$define HOME_DIR PROJECT_FOLDER
-
 package opal:     import *;
 package random:   import uniform, randint;
 package pygame:   import mixer;
