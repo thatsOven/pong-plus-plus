@@ -392,7 +392,7 @@ new class Game {
 
         match mode {
             case FlyingObstacle.LEFT {
-                if (this.customLeftPad is not None and this.customRightPad is not None) or this.isPlayerInFlyingSafeLeft() {
+                if (this.customLeftPad is None and this.customRightPad is None) or this.isPlayerInFlyingSafeLeft() {
                     if randint(0, 1) == 0 {
                         return Vector(0, randint(OBSTACLE_SAFE_ZONE.y, this.leftPad.pos.y)), mode;
                     } else {
@@ -403,7 +403,7 @@ new class Game {
                 }
             }
             case FlyingObstacle.RIGHT {
-                if (this.customLeftPad is not None and this.customRightPad is not None) or this.isPlayerInFlyingSafeRight() {
+                if (this.customLeftPad is None and this.customRightPad is None) or this.isPlayerInFlyingSafeRight() {
                     if randint(0, 1) == 0 {
                         return Vector(RESOLUTION.x, randint(OBSTACLE_SAFE_ZONE.y, this.rightPad.pos.y)), mode;
                     } else {
