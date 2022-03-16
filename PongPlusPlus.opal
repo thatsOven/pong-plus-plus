@@ -52,7 +52,7 @@ new int PLAYER_SIZE           = 20,
         BONUS_SIZE            = 20,
         BONUS_LIFE            = 150,
         BONUS_EFFECT_DUR      = 200,
-        PLAYER_COUNT_BONUS    = 0,
+        PLAYER_COUNT_BONUS    = 20,
         BONUS_PAD_DISTANCE    = 100,
         BONUS_PAD_Y_DIST      = 50,
         FLYING_SAFE_ZONE_SIZE = 100;
@@ -505,7 +505,7 @@ new class Game {
                         }
                     }
                 } elif this.player.count >= PLAYER_COUNT_BONUS and this.player.playing {
-                    if randint(0, 2500) < 2500 {
+                    if randint(0, 2500) < 1 {
                         this.bonus = Bonus(this.getSafePos());
                     }
                 }
