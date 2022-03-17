@@ -433,7 +433,8 @@ new class Game {
     }
 
     new method __jumpClick(event) {
-        if event.button == 1 {
+        if event.button == 1 and not this.player.isDead() and
+                                (not this.player.explosion.isAlive()) {
             this.player.jump();
         }
     }
