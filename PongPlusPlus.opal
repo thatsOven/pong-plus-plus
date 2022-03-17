@@ -94,10 +94,6 @@ new class Pad {
 
         this.isLeft = isLeft;
 
-        this.__resetMvt();
-    }
-    
-    new method __resetMvt() {
         this.__cnt  = 0;
         this.__step = 0;
     }
@@ -111,7 +107,7 @@ new class Pad {
 
     new method reset() {
         this.pos.y = RESOLUTION.y // 2 - this.__size.y // 2;
-        this.__resetMvt();
+        this.__step = 0;
     }
 
     new method update() {
