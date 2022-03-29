@@ -254,7 +254,7 @@ new class Player {
     new method jump() {
         if not this.playing {
             this.start();
-        } 
+        }
 
         if not this.sprinting {
             this.velocity.y = -JUMP_VELOCITY;
@@ -301,7 +301,7 @@ new class Player {
                     this.velocity += GRAVITY;
                     this.pos += this.velocity;
                 }
-                
+
                 if this.__rainbow or this.sprinting {
                     graphics.fastRectangle(this.pos, PLAYER_SIZE_VEC, hsvToRgb(this.__rainbowCnt));
 
@@ -503,8 +503,8 @@ new class Game {
             } elif event.key in KEYS {
                 this.player.jump();
             }
-        } 
-        
+        }
+
         if event.key == K_F3 {
             !DEBUG_MODE;
         }
@@ -535,7 +535,7 @@ new class Game {
 
     new method __releaseClick(event) {
         if this.player.playing and this.player.sprinting {
-            if event.button == 1 {
+            if event.button == 3 {
                 this.__playerSprintOff();
             }
         }
@@ -566,7 +566,7 @@ new class Game {
 
         if this.player.playing {
             graphics.line(
-                SPRINT_LINE_POS, 
+                SPRINT_LINE_POS,
                 Vector(
                     SPRINT_LINE_POS.x + Utils.translate(
                     this.__sprintAmt,
@@ -627,7 +627,7 @@ new class Game {
                                 this.__alphaChange = BONUS_ALPHA_CHANGE;
                                 this.player.rainbowOn();
                             }
-                            
+
                             mixer.Sound.play(this.__bonusSound);
                         }
                     }
@@ -668,7 +668,7 @@ new class Game {
                 }
             } else {
                 graphics.translate(Vector(randint(-SHAKE, SHAKE), randint(-SHAKE, SHAKE)));
- 
+
                 if this.__sprintAmt > 0 {
                     this.__sprintAmt -= SPRINT_USE_DELTA;
                 } else {
