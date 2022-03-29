@@ -11,21 +11,24 @@ new bool DEBUG_MODE = False;
 new tuple FG                     = (255, 255, 255),
           BG                     = (  0,   0,   0),
           KEYS                   = (K_SPACE, K_UP, K_w, K_RETURN),
+          SPRINT_KEYS            = (K_c, K_z, K_RIGHT, K_LEFT),
           HITBOX_COLOR           = (255,   0,   0),
           INFO_COLOR             = (  0,   0, 255),
           SAFE_ZONE_COLOR        = (  0, 255,   0),
           FLYING_SAFE_ZONE_COLOR = (255, 255,   0);
 
-new <Vector> GRAVITY            = Vector(0, 0.6),
-             PAD_SIZE           = Vector(15, 100),
-             PLAYER_VELOCITY    = Vector(5),
-             OBSTACLE_SAFE_ZONE = Vector(100, 50);
+new <Vector> GRAVITY             = Vector(0, 0.6),
+             PAD_SIZE            = Vector(15, 100),
+             PLAYER_VELOCITY     = Vector(5),
+             OBSTACLE_SAFE_ZONE  = Vector(100, 50),
+             SPRINT_LINE_POS     = Vector(40, 40),
+             LIGHTNING_LINE_RPOS = Vector(20, 26);
 
 new int PLAYER_SIZE           = 20,
         PAD_WALL_DISTANCE     = 40,
         FRAMERATE             = 60,
         PAD_MOVE_SPEED_MLT    = 3,
-        TOLERANCE             = 2,
+        TOLERANCE             = 15,
         ALPHA_CHANGE          = 100,
         BONUS_ALPHA_CHANGE    = 25,
         LIFESPAN_DECREASE     = 3,
@@ -53,7 +56,18 @@ new int PLAYER_SIZE           = 20,
         PLAYER_COUNT_BONUS    = 20,
         BONUS_PAD_DISTANCE    = 100,
         BONUS_PAD_Y_DIST      = 50,
-        FLYING_SAFE_ZONE_SIZE = 100;
+        FLYING_SAFE_ZONE_SIZE = 100,
+        SPRINT_CHARGE_DELTA   = 1,
+        SPRINT_MAX_VALUE      = 900,
+        SPRINT_USE_DELTA      = 10,
+        SPRINT_VELOCITY       = 15,
+        SPRINT_ALPHA_CHANGE   = 40,
+        SHAKE                 = 2,
+        SPRINT_LINE_LENGTH    = 200,
+        SPRINT_LINE_WIDTH     = 4,
+        SPRINT_COOLDOWN       = 30,
+        HIT_COOLDOWN          = 15,
+        LIGHTNING_SIZE        = 28;
 
 new float JUMP_VELOCITY                = 10,
           PARTICLE_VELOCITY_MULTIPLIER = 0.98,
@@ -72,7 +86,9 @@ new <Vector> PLAYER_SIZE_VEC     = Vector(PLAYER_SIZE, PLAYER_SIZE),
              CENTER              = RESOLUTION // 2,
              BONUS_SIZE_VEC      = Vector(BONUS_SIZE, BONUS_SIZE),
              HALF_BONUS_SIZE_VEC = BONUS_SIZE_VEC // 2,
-             BONUS_PAD_SIZE      = Vector(PAD_SIZE.x, RESOLUTION.y - BONUS_PAD_Y_DIST * 2);
+             BONUS_PAD_SIZE      = Vector(PAD_SIZE.x, RESOLUTION.y - BONUS_PAD_Y_DIST * 2),
+             LIGHTNING_SIZE_VEC  = Vector(LIGHTNING_SIZE, LIGHTNING_SIZE),
+             LIGHTNING_POS       = Vector(SPRINT_LINE_POS.x + SPRINT_LINE_LENGTH + LIGHTNING_LINE_RPOS.x, LIGHTNING_LINE_RPOS.y);
 
 new <Graphics> graphics = Graphics(RESOLUTION, FRAMERATE, caption = "Pong++");
 
@@ -133,7 +149,7 @@ new class Pad {
                 }
 
                 graphics.fastRectangle(
-                    tmp, Vector(TOLERANCE * 2, this.__size.y),
+                    tmp, Vector(TOLERANCE, this.__size.y),
                     HITBOX_COLOR, DEBUG_LINES_WIDTH
                 );
             } else {
@@ -146,8 +162,8 @@ new class Pad {
                 }
 
                 graphics.fastRectangle(
-                    Vector(this.pos.x - TOLERANCE, this.pos.y),
-                    Vector(TOLERANCE * 2, this.__size.y),
+                    this.pos,
+                    Vector(TOLERANCE, this.__size.y),
                     HITBOX_COLOR, DEBUG_LINES_WIDTH
                 );
             }
@@ -169,14 +185,14 @@ new class Pad {
 
         if this.isLeft {
             new dynamic tmp = this.pos.x + this.__size.x;
-            if playerPosX in Utils.tolerance(tmp, TOLERANCE) and (playerPosY in r or playerPosY + PLAYER_SIZE in r) {
+            if playerPosX in range(tmp - TOLERANCE, tmp) and (playerPosY in r or playerPosY + PLAYER_SIZE in r) {
                 this.__moveTo(randint(OBSTACLE_SAFE_ZONE.y, RESOLUTION.y - OBSTACLE_SAFE_ZONE.y - this.__size.y));
                 return True;
             }
         } else {
             playerPosX += PLAYER_SIZE;
 
-            if playerPosX in Utils.tolerance(this.pos.x, TOLERANCE) and (playerPosY in r or playerPosY + PLAYER_SIZE in r) {
+            if playerPosX in range(this.pos.x, this.pos.x + TOLERANCE) and (playerPosY in r or playerPosY + PLAYER_SIZE in r) {
                 this.__moveTo(randint(OBSTACLE_SAFE_ZONE.y, RESOLUTION.y - OBSTACLE_SAFE_ZONE.y - this.__size.y));
                 return True;
             }
@@ -203,6 +219,17 @@ new class Player {
 
         this.__rainbow    = False;
         this.__rainbowCnt = 0;
+
+        this.sprinting = False;
+    }
+
+    new method sprintOn() {
+        this.sprinting = True;
+        this.velocity.y = 0;
+    }
+
+    new method sprintOff() {
+        this.sprinting = False;
     }
 
     new method rainbowOn() {
@@ -227,9 +254,11 @@ new class Player {
     new method jump() {
         if not this.playing {
             this.start();
-        }
+        } 
 
-        this.velocity.y = -JUMP_VELOCITY;
+        if not this.sprinting {
+            this.velocity.y = -JUMP_VELOCITY;
+        }
     }
 
     new method isDead() {
@@ -256,16 +285,24 @@ new class Player {
         return True;
     }
 
+    new method __getDir() {
+        return 1 if this.velocity.x > 0 else -1;
+    }
+
     new method update() {
         if this.explosion.isAlive() {
             this.explosion.update();
             this.explosion.show();
         } else {
             if this.playing {
-                this.velocity += GRAVITY;
-                this.pos      += this.velocity;
-
-                if this.__rainbow {
+                if this.sprinting {
+                    this.pos.x += SPRINT_VELOCITY * this.__getDir();
+                } else {
+                    this.velocity += GRAVITY;
+                    this.pos += this.velocity;
+                }
+                
+                if this.__rainbow or this.sprinting {
                     graphics.fastRectangle(this.pos, PLAYER_SIZE_VEC, hsvToRgb(this.__rainbowCnt));
 
                     this.__rainbowCnt += RAINBOW_DELTA;
@@ -305,6 +342,7 @@ $include os.path.join("HOME_DIR", "Bonus.opal")
 new class Game {
     new method __init__() {
         this.__dayCounter = 0;
+        this.__color      = True;
 
         this.leftPad  = Pad(True);
         this.rightPad = Pad(False);
@@ -318,8 +356,19 @@ new class Game {
         this.__deathSound = mixer.Sound(os.path.join("HOME_DIR", "sounds", "death.mp3"));
         this.__bonusSound = mixer.Sound(os.path.join("HOME_DIR", "sounds", "bonus.mp3"));
 
-        graphics.event(KEYDOWN)(this.__jump);
-        graphics.event(MOUSEBUTTONDOWN)(this.__jumpClick);
+        this.__lightning0 = graphics.loadImage(
+            os.path.join("HOME_DIR", "lightning.png"),
+            LIGHTNING_SIZE_VEC
+        );
+
+        this.__lightning1 = this.__lightning0.copy();
+        this.__lightning0.fill(FG, special_flags = BLEND_ADD);
+        this.__lightning1.fill(BG, special_flags = BLEND_ADD);
+
+        graphics.event(KEYDOWN)(this.__move);
+        graphics.event(KEYUP)(this.__release);
+        graphics.event(MOUSEBUTTONDOWN)(this.__moveClick);
+        graphics.event(MOUSEBUTTONUP)(this.__releaseClick);
         graphics.update(this.update);
     }
 
@@ -336,7 +385,12 @@ new class Game {
         this.bonus          = None;
         this.__customPadCnt = 0;
 
+        this.__sprintAmt = 0;
+
         this.__resetCustomPads();
+
+        this.__sprintCooldown = SPRINT_COOLDOWN;
+        this.__hitCooldown    = HIT_COOLDOWN;
     }
 
     new method __reset() {
@@ -344,6 +398,8 @@ new class Game {
         this.player.rainbowOff();
         this.leftPad.reset();
         this.rightPad.reset();
+
+        this.__playerSprintOff();
     }
 
     new method isSafe(pos) {
@@ -421,27 +477,77 @@ new class Game {
         }
     }
 
-    new method __jump(event) {
+    new method __playerSprintOn() {
+        if this.__sprintAmt > 0 and this.__sprintCooldown >= SPRINT_COOLDOWN {
+            this.__sprintCooldown = 0;
+
+            this.player.sprintOn();
+            this.__alphaChange = SPRINT_ALPHA_CHANGE;
+        }
+    }
+
+    new method __playerSprintOff() {
+        this.player.sprintOff();
+        this.__alphaChange = ALPHA_CHANGE;
+        graphics.resetCenter();
+    }
+
+    new method __move(event) {
         global DEBUG_MODE;
 
-        if event.key in KEYS and not this.player.isDead() and
-                                (not this.player.explosion.isAlive()) {
-            this.player.jump();
-        } elif event.key == K_F3 {
+        if (not this.player.sprinting) and not this.player.explosion.isAlive() {
+            if event.key in SPRINT_KEYS {
+                if this.player.playing {
+                    this.__playerSprintOn();
+                }
+            } elif event.key in KEYS {
+                this.player.jump();
+            }
+        } 
+        
+        if event.key == K_F3 {
             !DEBUG_MODE;
         }
     }
 
-    new method __jumpClick(event) {
-        if event.button == 1 and not this.player.isDead() and
-                                (not this.player.explosion.isAlive()) {
-            this.player.jump();
+    new method __moveClick(event) {
+        if (not this.player.sprinting) and not this.player.explosion.isAlive() {
+            match event.button {
+                case 3 {
+                    if this.player.playing {
+                        this.__playerSprintOn();
+                    }
+                }
+                case 1 {
+                    this.player.jump();
+                }
+            }
+        }
+    }
+
+    new method __release(event) {
+        if this.player.playing and this.player.sprinting {
+            if event.key in SPRINT_KEYS {
+                this.__playerSprintOff();
+            }
+        }
+    }
+
+    new method __releaseClick(event) {
+        if this.player.playing and this.player.sprinting {
+            if event.button == 1 {
+                this.__playerSprintOff();
+            }
         }
     }
 
     new method __invert() {
-        mixer.Sound.play(this.__hitSound);
-        this.player.invert();
+        if this.__hitCooldown >= HIT_COOLDOWN {
+            this.__hitCooldown = 0;
+
+            mixer.Sound.play(this.__hitSound);
+            this.player.invert();
+        }
     }
 
     new method update() {
@@ -459,6 +565,25 @@ new class Game {
         }
 
         if this.player.playing {
+            graphics.line(
+                SPRINT_LINE_POS, 
+                Vector(
+                    SPRINT_LINE_POS.x + Utils.translate(
+                    this.__sprintAmt,
+                    0, SPRINT_MAX_VALUE,
+                    2, SPRINT_LINE_LENGTH
+                    ),
+                    SPRINT_LINE_POS.y
+                ),
+                FG, SPRINT_LINE_WIDTH
+            );
+
+            if this.__color {
+                graphics.blitSurf(this.__lightning0, LIGHTNING_POS);
+            } else {
+                graphics.blitSurf(this.__lightning1, LIGHTNING_POS);
+            }
+
             if this.customLeftPad is not None and this.customRightPad is not None {
                 if this.__customPadCnt == 0 {
                     this.player.rainbowOff();
@@ -498,9 +623,11 @@ new class Game {
                             this.customLeftPad  = Pad( True, Vector(CENTER.x - BONUS_PAD_DISTANCE - BONUS_PAD_SIZE.x, BONUS_PAD_Y_DIST), BONUS_PAD_SIZE);
                             this.customRightPad = Pad(False, Vector(CENTER.x + BONUS_PAD_DISTANCE, BONUS_PAD_Y_DIST), BONUS_PAD_SIZE);
 
-                            this.__alphaChange = BONUS_ALPHA_CHANGE;
-                            this.player.rainbowOn();
-
+                            if not this.player.sprinting {
+                                this.__alphaChange = BONUS_ALPHA_CHANGE;
+                                this.player.rainbowOn();
+                            }
+                            
                             mixer.Sound.play(this.__bonusSound);
                         }
                     }
@@ -534,17 +661,36 @@ new class Game {
                     return;
                 }
             }
+
+            if not this.player.sprinting {
+                if this.__sprintAmt < SPRINT_MAX_VALUE {
+                    this.__sprintAmt += SPRINT_CHARGE_DELTA;
+                }
+            } else {
+                graphics.translate(Vector(randint(-SHAKE, SHAKE), randint(-SHAKE, SHAKE)));
+ 
+                if this.__sprintAmt > 0 {
+                    this.__sprintAmt -= SPRINT_USE_DELTA;
+                } else {
+                    this.__playerSprintOff();
+                }
+            }
+
+            this.__sprintCooldown++;
+            this.__hitCooldown++;
         } elif not this.player.explosion.isAlive() {
             graphics.simpleText("JUMP TO START", START_TEXT_POS, FG, True, True);
         }
+
+        this.player.update();
 
         this.__dayCounter++;
         if this.__dayCounter == DAY_CYCLE {
             this.__dayCounter = 0;
             unchecked: BG, FG = FG, BG;
-        }
 
-        this.player.update();
+            !this.__color;
+        }
 
         if DEBUG_MODE {
             graphics.fastRectangle(OBSTACLE_SAFE_ZONE, RESOLUTION - OBSTACLE_SAFE_ZONE * 2, SAFE_ZONE_COLOR, DEBUG_LINES_WIDTH);
