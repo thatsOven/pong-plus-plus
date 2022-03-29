@@ -66,7 +66,7 @@ new int PLAYER_SIZE           = 20,
         SPRINT_LINE_LENGTH    = 200,
         SPRINT_LINE_WIDTH     = 4,
         SPRINT_COOLDOWN       = 30,
-        HIT_COOLDOWN          = 15,
+        HIT_COOLDOWN          = 5,
         LIGHTNING_SIZE        = 28;
 
 new float JUMP_VELOCITY                = 10,
