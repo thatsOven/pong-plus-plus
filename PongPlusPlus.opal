@@ -116,12 +116,12 @@ new class Game {
         this.__resetPart();
 
         mixer.init();
-        this.__hitSound   = mixer.Sound(os.path.join("HOME_DIR", "sounds", "hit.mp3"));
-        this.__deathSound = mixer.Sound(os.path.join("HOME_DIR", "sounds", "death.mp3"));
-        this.__bonusSound = mixer.Sound(os.path.join("HOME_DIR", "sounds", "bonus.mp3"));
+        this.__hitSound   = mixer.Sound(os.path.join(HOME_DIR, "sounds", "hit.mp3"));
+        this.__deathSound = mixer.Sound(os.path.join(HOME_DIR, "sounds", "death.mp3"));
+        this.__bonusSound = mixer.Sound(os.path.join(HOME_DIR, "sounds", "bonus.mp3"));
 
         this.__lightning0 = graphics.loadImage(
-            os.path.join("HOME_DIR", "lightning.png"),
+            os.path.join(HOME_DIR, "lightning.png"),
             LIGHTNING_SIZE_VEC
         );
 
