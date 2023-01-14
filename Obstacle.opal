@@ -8,6 +8,26 @@ new class Obstacle {
 
         this.step  = OBSTACLE_DELTA_ALPHA;
         this.alpha = OBSTACLE_START_ALPHA;
+
+        if RAYCASTING {
+            this.boundaries = [
+                Boundary(
+                    this.pos, Vector(this.pos.x + tmp, this.pos.y)
+                ),
+                Boundary(
+                    Vector(this.pos.x + tmp, this.pos.y),
+                    this.pos + this.size
+                ),
+                Boundary(
+                    this.pos + this.size,
+                    Vector(this.pos.x, this.pos.y + tmp)
+                ),
+                Boundary(
+                    Vector(this.pos.x, this.pos.y + tmp),
+                    this.pos
+                )
+            ];
+        }
     }
 
     new method isAlive() {

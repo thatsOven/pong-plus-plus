@@ -10,7 +10,86 @@ new class FlyingObstacle : Obstacle {
         this.size     = Vector(tmp, tmp);
         this.mode     = mode;
         this.velocity = randint(MIN_FLYINGOBST_SPEED, MAX_FLYINGOBST_SPEED);
+
+        this.__computeBounds();
     }
+
+    new method __computeBounds() {
+        if not RAYCASTING {
+            return;
+        }
+
+        match this.mode {
+            case FlyingObstacle.LEFT {
+                this.boundaries = [
+                    Boundary(
+                        this.pos, Vector(this.pos.x, this.pos.y + this.size.y)
+                    ),
+                    Boundary(
+                        Vector(this.pos.x, this.pos.y + this.size.y),
+                        Vector(
+                            this.pos.x + this.size.x, 
+                            this.pos.y + this.size.y // 2
+                        )
+                    ),
+                    Boundary(
+                        Vector(
+                            this.pos.x + this.size.x, 
+                            this.pos.y + this.size.y // 2
+                        ), this.pos
+                    )
+                ];
+            }
+            case FlyingObstacle.RIGHT {
+                this.boundaries = [
+                    Boundary(
+                        Vector(this.pos.x, this.pos.y + this.size.y // 2),
+                        Vector(this.pos.x + this.size.x, this.pos.y)
+                    ),
+                    Boundary(
+                        Vector(this.pos.x + this.size.x, this.pos.y),
+                        this.pos + this.size
+                    ),
+                    Boundary(
+                        this.pos + this.size,
+                        Vector(this.pos.x, this.pos.y + this.size.y // 2)
+                    )
+                ];
+            }
+            case FlyingObstacle.TOP {
+                this.boundaries = [
+                    Boundary(
+                        this.pos, Vector(this.pos.x + this.size.x, this.pos.y)
+                    ),
+                    Boundary(
+                        Vector(this.pos.x + this.size.x, this.pos.y),
+                        Vector(this.pos.x + this.size.x // 2, this.pos.y + this.size.y)
+                    ),
+                    Boundary(
+                        Vector(this.pos.x + this.size.x // 2, this.pos.y + this.size.y),
+                        this.pos
+                    )
+                ];
+            }
+            case FlyingObstacle.BOTTOM {
+                this.boundaries = [
+                    Boundary(
+                        Vector(this.pos.x, this.pos.y + this.size.y),
+                        Vector(this.pos.x + this.size.x // 2, this.pos.y)
+                    ),
+                    Boundary(
+                        Vector(this.pos.x + this.size.x // 2, this.pos.y),
+                        this.pos + this.size
+                    ),
+                    Boundary(
+                        this.pos + this.size, 
+                        Vector(this.pos.x, this.pos.y + this.size.y)
+                    )
+                ];
+            }
+        }
+    }
+
 
     new method isAlive() {
         match this.mode {
@@ -78,6 +157,8 @@ new class FlyingObstacle : Obstacle {
                 graphics.polygon((pt1, pt2, this.pos + this.size), FG);
             }
         }
+
+        this.__computeBounds();
 
         if DEBUG_MODE {
             graphics.fastRectangle(this.pos, this.size, HITBOX_COLOR, DEBUG_LINES_WIDTH);

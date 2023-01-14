@@ -1,12 +1,13 @@
 package opal:     import *;
 package random:   import uniform, randint;
-package pygame:   import mixer;
+package pygame:   import mixer, Surface;
 package colorsys: import hsv_to_rgb;
 import math, os;
 
 new <Vector> RESOLUTION = Vector(1280, 720);
 
-new bool DEBUG_MODE = False;
+new bool DEBUG_MODE = False,
+         RAYCASTING = True;
 
 new tuple FG                     = (255, 255, 255),
           BG                     = (  0,   0,   0),
@@ -15,7 +16,8 @@ new tuple FG                     = (255, 255, 255),
           HITBOX_COLOR           = (255,   0,   0),
           INFO_COLOR             = (  0,   0, 255),
           SAFE_ZONE_COLOR        = (  0, 255,   0),
-          FLYING_SAFE_ZONE_COLOR = (255, 255,   0);
+          FLYING_SAFE_ZONE_COLOR = (255, 255,   0),
+          RAY_COLOR              = (255, 143, 246);
 
 new <Vector> GRAVITY             = Vector(0, 0.6),
              PAD_SIZE            = Vector(15, 100),
@@ -67,7 +69,8 @@ new int PLAYER_SIZE           = 20,
         SPRINT_LINE_WIDTH     = 4,
         SPRINT_COOLDOWN       = 30,
         HIT_COOLDOWN          = 5,
-        LIGHTNING_SIZE        = 28;
+        LIGHTNING_SIZE        = 28,
+        RAYS_QTY              = 360;
 
 new float JUMP_VELOCITY                = 10,
           PARTICLE_VELOCITY_MULTIPLIER = 0.98,
@@ -90,13 +93,15 @@ new <Vector> PLAYER_SIZE_VEC     = Vector(PLAYER_SIZE, PLAYER_SIZE),
              LIGHTNING_SIZE_VEC  = Vector(LIGHTNING_SIZE, LIGHTNING_SIZE),
              LIGHTNING_POS       = Vector(SPRINT_LINE_POS.x + SPRINT_LINE_LENGTH + LIGHTNING_LINE_RPOS.x, LIGHTNING_LINE_RPOS.y);
 
-new <Graphics> graphics = Graphics(RESOLUTION, FRAMERATE, caption = "Pong++");
+new <Graphics> graphics = Graphics(RESOLUTION, FRAMERATE, caption = "Pong++", showFps = True);
 
 new function hsvToRgb(h, s = 1, v = 1) {
     return tuple(round(i * 255) for i in hsv_to_rgb(h, s, v));
 }
 
 $include os.path.join("HOME_DIR", "particles.opal")
+$include os.path.join("HOME_DIR", "Boundary.opal")
+$include os.path.join("HOME_DIR", "Ray.opal")
 $include os.path.join("HOME_DIR", "Pad.opal")
 $include os.path.join("HOME_DIR", "Player.opal")
 $include os.path.join("HOME_DIR", "Obstacle.opal")
@@ -112,6 +117,21 @@ new class Game {
         this.rightPad = Pad(False);
 
         this.player = Player();
+
+        this.walls = [
+            Boundary(
+                Vector(), Vector(RESOLUTION.x)
+            ),
+            Boundary(
+                Vector(RESOLUTION.x), RESOLUTION
+            ),
+            Boundary(
+                RESOLUTION, Vector(0, RESOLUTION.y)
+            ),
+            Boundary(
+                Vector(0, RESOLUTION.y), Vector()
+            )
+        ];
 
         this.__resetPart();
 
@@ -342,6 +362,22 @@ new class Game {
                 FG, SPRINT_LINE_WIDTH
             );
 
+            if this.__color and RAYCASTING {
+                new dynamic walls = this.walls.copy();
+
+                if this.customLeftPad is not None and this.customRightPad is not None {
+                    walls += this.customLeftPad.boundaries + this.customRightPad.boundaries;
+                } else {
+                    walls += this.leftPad.boundaries + this.rightPad.boundaries;
+                }
+                
+                for obstacle in this.obstacles {
+                    walls += obstacle.boundaries;
+                }
+
+                this.player.look(walls);
+            }   
+
             if this.__color {
                 graphics.blitSurf(this.__lightning0, LIGHTNING_POS);
             } else {
@@ -387,10 +423,8 @@ new class Game {
                             this.customLeftPad  = Pad( True, Vector(CENTER.x - BONUS_PAD_DISTANCE - BONUS_PAD_SIZE.x, BONUS_PAD_Y_DIST), BONUS_PAD_SIZE);
                             this.customRightPad = Pad(False, Vector(CENTER.x + BONUS_PAD_DISTANCE, BONUS_PAD_Y_DIST), BONUS_PAD_SIZE);
 
-                            if not this.player.sprinting {
-                                this.__alphaChange = BONUS_ALPHA_CHANGE;
-                                this.player.rainbowOn();
-                            }
+                            this.__alphaChange = BONUS_ALPHA_CHANGE;
+                            this.player.rainbowOn();
 
                             mixer.Sound.play(this.__bonusSound);
                         }

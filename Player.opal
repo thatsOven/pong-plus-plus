@@ -2,6 +2,29 @@ new class Player {
     new method __init__() {
         this.__reset();
         this.explosion = Explosion(this.pos);
+
+        this.rays = [];
+        for i in range(RAYS_QTY) {
+            this.rays.append(Ray(this.pos, math.radians(i * (360 / RAYS_QTY))));
+        }
+
+        this.gradient = graphics.loadImage(
+            os.path.join(HOME_DIR, "gradient.png"),
+            RESOLUTION * 2
+        );
+    }
+
+    property pos {
+        set {
+            this.__pos = value;
+
+            for i in range(len(this.rays)) {
+                this.rays[i].pos = value;
+            }
+        }
+        get {
+            return this.__pos;
+        }
     }
 
     new method __reset() {
@@ -10,7 +33,7 @@ new class Player {
         this.count    = 0;
         this.playing  = False;
         this.dead     = False;
-        this.pos      = CENTER.copy() - PLAYER_SIZE_VEC // 2;
+        this.__pos    = CENTER.copy() - PLAYER_SIZE_VEC // 2;
         this.velocity = Vector();
 
         this.__rainbow    = False;
@@ -83,6 +106,66 @@ new class Player {
 
     new method __getDir() {
         return 1 if this.velocity.x > 0 else -1;
+    }
+
+    new method look(walls) {
+        new dynamic points = [],
+                    pos    = this.pos + PLAYER_SIZE_VEC // 2;
+
+        for i = 0; i < len(this.rays); i++ {
+            new dynamic closest = None;
+            new float    record = sys.maxsize;
+
+            for j = 0; j < len(walls); j++ {
+                new dynamic pt = this.rays[i].cast(walls[j]);
+                if pt is not None {
+                    new float d = pos.distance(pt);
+
+                    if d < record {
+                        record  = d;
+                        closest = pt;
+                    }
+                }
+            }
+
+            if closest is not None {
+                if DEBUG_MODE {
+                    graphics.line(pos, closest, RAY_COLOR, DEBUG_LINES_WIDTH);
+                }
+
+                points.append(closest);
+            }
+        }
+
+        new dynamic surf = Surface(RESOLUTION.toList(2), SRCALPHA), color;
+
+        if this.__rainbow or this.sprinting {
+            color = hsvToRgb(this.__rainbowCnt);
+        } else {
+            color = FG;
+        }
+
+        for i = 0; i < len(points) - 1; i++ {
+            graphics.polygon(
+                (pos, points[i], points[i + 1]),
+                color + (50, ),
+                surf = surf
+            );
+        }
+
+        graphics.polygon(
+            (pos, points[len(points) - 1], points[0]),
+            color + (50, ),
+            surf = surf
+        );
+        
+        surf.blit(
+            this.gradient, (pos.x - RESOLUTION.x, 
+            pos.y - RESOLUTION.y),
+            special_flags = BLEND_RGBA_MULT
+        );
+    
+        graphics.blitSurf(surf, Vector());
     }
 
     new method update() {

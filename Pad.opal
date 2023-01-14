@@ -16,6 +16,32 @@ new class Pad {
 
         this.__cnt  = 0;
         this.__step = 0;
+
+        this.__computeBounds();
+    }
+
+    new method __computeBounds() {
+        if not RAYCASTING {
+            return;
+        }
+        
+        this.boundaries = [
+            Boundary(
+                this.pos, Vector(this.pos.x + this.__size.x, this.pos.y)
+            ),
+            Boundary(
+                Vector(this.pos.x + this.__size.x, this.pos.y),
+                this.pos + this.__size
+            ),
+            Boundary(
+                this.pos + this.__size,
+                Vector(this.pos.x, this.pos.y + this.__size.y)
+            ),
+            Boundary(
+                Vector(this.pos.x, this.pos.y + this.__size.y),
+                this.pos
+            )
+        ];
     }
 
     new method __moveTo(pos) {
@@ -28,11 +54,14 @@ new class Pad {
     new method reset() {
         this.pos.y = RESOLUTION.y // 2 - this.__size.y // 2;
         this.__step = 0;
+        this.__computeBounds();
     }
 
     new method update() {
         this.pos.y += this.__step;
         this.pos.y = int(this.pos.y);
+
+        this.__computeBounds();
 
         this.__cnt++;
         if this.__cnt == EFFECTIVE_PAD_FRMT {
