@@ -3,15 +3,19 @@ new class Player {
         this.__reset();
         this.explosion = Explosion(this.pos);
 
-        this.rays = [];
-        for i in range(RAYS_QTY) {
-            this.rays.append(Ray(this.pos, math.radians(i * (360 / RAYS_QTY))));
-        }
+        this.resetRays();
 
         this.gradient = graphics.loadImage(
             os.path.join(HOME_DIR, "gradient.png"),
             RESOLUTION * 2
         );
+    }
+
+    new method resetRays() {
+        this.rays = [];
+        for i in range(RAYS_QTY) {
+            this.rays.append(Ray(this.pos, math.radians(i * (360 / RAYS_QTY))));
+        }
     }
 
     property pos {

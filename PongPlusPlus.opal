@@ -2,7 +2,7 @@ package opal:     import *;
 package random:   import uniform, randint;
 package pygame:   import mixer, Surface;
 package colorsys: import hsv_to_rgb;
-import math, os;
+import math, os, sys, json;
 
 new <Vector> RESOLUTION = Vector(1280, 720);
 
@@ -70,7 +70,11 @@ new int PLAYER_SIZE           = 20,
         SPRINT_COOLDOWN       = 30,
         HIT_COOLDOWN          = 5,
         LIGHTNING_SIZE        = 28,
-        RAYS_QTY              = 360;
+        RAYS_QTY              = 360,
+        BENCH_FRAMES          = 1000,
+        MAX_RAYS              = 3600,
+        MIN_RAYS              = 36,
+        FLYING_CHANGE_EACH    = 10;
 
 new float JUMP_VELOCITY                = 10,
           PARTICLE_VELOCITY_MULTIPLIER = 0.98,
@@ -148,12 +152,6 @@ new class Game {
         this.__lightning1 = this.__lightning0.copy();
         this.__lightning0.fill(FG, special_flags = BLEND_ADD);
         this.__lightning1.fill(BG, special_flags = BLEND_ADD);
-
-        graphics.event(KEYDOWN)(this.__move);
-        graphics.event(KEYUP)(this.__release);
-        graphics.event(MOUSEBUTTONDOWN)(this.__moveClick);
-        graphics.event(MOUSEBUTTONUP)(this.__releaseClick);
-        graphics.update(this.update);
     }
 
     new method __resetCustomPads() {
@@ -496,11 +494,180 @@ new class Game {
     }
 
     new method run() {
+        graphics.event(KEYDOWN)(this.__move);
+        graphics.event(KEYUP)(this.__release);
+        graphics.event(MOUSEBUTTONDOWN)(this.__moveClick);
+        graphics.event(MOUSEBUTTONUP)(this.__releaseClick);
+        graphics.update(this.update);
+
+        graphics.fill(BG);
+        graphics.run(drawBackground = False);
+    }
+
+    new method __benchmark(step, spacing) {
+        new function benchmark() {
+            global RAYCASTING, RAYS_QTY;
+
+            graphics.simpleText(str(this.__currFrame), Vector(CENTER.x, 5 * (CENTER.y // 3)), FG, True, True);
+            graphics.fillAlpha(BG, this.__alphaChange);
+            graphics.line(
+                SPRINT_LINE_POS,
+                Vector(
+                    SPRINT_LINE_POS.x + Utils.translate(
+                    this.__sprintAmt,
+                    0, SPRINT_MAX_VALUE,
+                    2, SPRINT_LINE_LENGTH
+                    ),
+                    SPRINT_LINE_POS.y
+                ),
+                FG, SPRINT_LINE_WIDTH
+            );
+
+            if RAYCASTING {
+                new dynamic walls = this.walls.copy();
+
+                walls += this.leftPad.boundaries + this.rightPad.boundaries;
+
+                if this.leftFlying is not None and this.rightFlying is not None {
+                    walls += this.leftFlying.boundaries + this.rightFlying.boundaries;
+                }
+                
+                for obstacle in this.obstacles {
+                    walls += obstacle.boundaries;
+                }
+
+                this.player.look(walls);
+            }   
+
+            graphics.blitSurf(this.__lightning0, LIGHTNING_POS);
+
+            this.leftPad.update();
+            this.rightPad.update();
+            this.bonus.update();
+
+            for obstacle in this.obstacles {
+                obstacle.update();
+            }
+
+            if this.__currFrame % FLYING_CHANGE_EACH == 0 {
+                this.leftFlying  = FlyingObstacle(Vector(step.x, step.y * 7), FlyingObstacle.LEFT);
+                this.rightFlying = FlyingObstacle(step * 7, FlyingObstacle.RIGHT);
+            }
+
+            this.leftFlying.update();
+            this.rightFlying.update(); 
+
+            this.player.update();
+
+            if this.player.pos.x >= RESOLUTION.x {
+                this.player.pos.y += step.y;
+                this.player.pos.x = 0;
+
+                if this.player.pos.y >= RESOLUTION.y {
+                    this.player.pos.y = step.y - spacing;
+                }
+            }
+
+            this.__sprintAmt++;
+            if this.__sprintAmt == SPRINT_MAX_VALUE {
+                this.__sprintAmt = 0;
+            }
+
+            this.__fps += graphics.getFps();
+
+            this.__currFrame++;
+            if this.__currFrame == BENCH_FRAMES {
+                this.__currFrame = 0;
+                new dynamic fps = this.__fps / BENCH_FRAMES;
+                this.__fps = 0;
+
+                if fps in Utils.tolerance(FRAMERATE, 5) or not RAYCASTING {
+                    new dynamic settings;
+                    with open(os.path.join(HOME_DIR, "settings.json"), "w") as settings {
+                        settings.write(json.dumps({
+                            "framerate":  FRAMERATE,
+                            "raycasting": RAYCASTING,
+                            "rays":       RAYS_QTY
+                        }));
+                    }
+                    
+                    quit;
+                } elif fps > FRAMERATE and RAYCASTING {
+                    this.__minRays = RAYS_QTY;
+                    RAYS_QTY = (RAYS_QTY + this.__maxRays) // 2;
+                    this.player.resetRays();
+                } elif RAYS_QTY <= MIN_RAYS + 1 {
+                    RAYCASTING = False;
+                } else {
+                    this.__maxRays = RAYS_QTY;
+                    RAYS_QTY = (RAYS_QTY + this.__minRays) // 2;
+                    this.player.resetRays();
+                }
+            } 
+        }
+
+        return benchmark;
+    }
+
+    new method benchmark() {
+        this.__fps       = 0;
+        this.__currFrame = 0;
+
+        this.__maxRays = MAX_RAYS;
+        this.__minRays = MIN_RAYS;
+
+        new dynamic origStep = Vector(RESOLUTION.x // 8, RESOLUTION.y // 8),
+                    step     = origStep.copy(),
+                    pos      = origStep.copy(),
+                    spacing  = step.y // 2;
+        origStep.x *= 7;
+        origStep.y *= 6;
+
+        this.obstacles = [];
+        while not pos == origStep {
+            this.obstacles.append(Obstacle(pos.copy()));
+            this.obstacles[-1].lifeSpan = -1;
+            pos.x += step.x;
+
+            if pos.x >= origStep.x {
+                pos.x  = step.x;
+                pos.y += step.y;
+
+                if pos.y >= origStep.y {
+                    break;
+                }
+            }
+        }
+
+        this.bonus = Bonus(Vector(randint(0, RESOLUTION.x), randint(0, RESOLUTION.y)));
+
+        this.player.pos        = Vector(0, step.y - spacing);
+        this.player.velocity.x = 1;
+        this.player.playing    = True;
+        this.player.sprinting  = True;
+
+        this.leftFlying  = None;
+        this.rightFlying = None;
+        
+        graphics.framerate = None;
+        graphics.update(this.__benchmark(step, spacing));
         graphics.fill(BG);
         graphics.run(drawBackground = False);
     }
 }
 
 main {
-    Game().run();
+    with open(os.path.join(HOME_DIR, "settings.json"), "r") as settings {
+        new dynamic sets = json.load(settings);
+
+        FRAMERATE  = sets["framerate"];
+        RAYCASTING = sets["raycasting"];
+        RAYS_QTY   = sets["rays"];
+    }
+
+    if "--bench" in sys.argv {
+        Game().benchmark();
+    } else {
+        Game().run();
+    }
 }
