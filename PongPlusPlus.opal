@@ -581,7 +581,7 @@ new class Game {
                 new dynamic fps = this.__fps / BENCH_FRAMES;
                 this.__fps = 0;
 
-                if fps in Utils.tolerance(FRAMERATE, 5) or not RAYCASTING {
+                if FRAMERATE <= fps <= FRAMERATE + 5 or not RAYCASTING {
                     new dynamic settings;
                     with open(os.path.join(HOME_DIR, "settings.json"), "w") as settings {
                         settings.write(json.dumps({
