@@ -360,7 +360,7 @@ new class Game {
                 FG, SPRINT_LINE_WIDTH
             );
 
-            if this.__color and RAYCASTING {
+            if (this.player.sprinting or this.__color) and RAYCASTING {
                 new dynamic walls = this.walls.copy();
 
                 if this.customLeftPad is not None and this.customRightPad is not None {
