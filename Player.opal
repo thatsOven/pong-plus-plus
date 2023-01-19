@@ -14,7 +14,7 @@ new class Player {
     new method resetRays() {
         this.rays = [];
         for i in range(RAYS_QTY) {
-            this.rays.append(Ray(this.pos, math.radians(i * (360 / RAYS_QTY))));
+            this.rays.append(Ray(this.pos + PLAYER_SIZE_VEC // 2, math.radians(i * (360 / RAYS_QTY))));
         }
     }
 
@@ -23,7 +23,7 @@ new class Player {
             this.__pos = value;
 
             for i in range(len(this.rays)) {
-                this.rays[i].pos = value;
+                this.rays[i].pos = value + PLAYER_SIZE_VEC // 2;
             }
         }
         get {
