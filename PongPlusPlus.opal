@@ -536,6 +536,14 @@ new class Game {
                     walls += obstacle.boundaries;
                 }
 
+                IO.out(
+                    this.player.pos,
+                    IO.endl,
+                    this.player.rays[0].pos,
+                    IO.endl,
+                    "===="
+                );
+
                 this.player.look(walls);
             }   
 

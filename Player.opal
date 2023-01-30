@@ -18,13 +18,16 @@ new class Player {
         }
     }
 
+    new method __updateRays() {
+        for i in range(len(this.rays)) {
+            this.rays[i].pos = this.pos + PLAYER_SIZE_VEC // 2;
+        }
+    }   
+
     property pos {
         set {
             this.__pos = value;
-
-            for i in range(len(this.rays)) {
-                this.rays[i].pos = value + PLAYER_SIZE_VEC // 2;
-            }
+            this.__updateRays();
         }
         get {
             return this.__pos;
@@ -180,6 +183,7 @@ new class Player {
             if this.playing {
                 if this.sprinting {
                     this.pos.x += SPRINT_VELOCITY * this.__getDir();
+                    this.__updateRays();
                 } else {
                     this.velocity += GRAVITY;
                     this.pos += this.velocity;
