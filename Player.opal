@@ -152,19 +152,7 @@ new class Player {
             color = FG;
         }
 
-        for i = 0; i < len(points) - 1; i++ {
-            graphics.polygon(
-                (pos, points[i], points[i + 1]),
-                color + (50, ),
-                surf = surf
-            );
-        }
-
-        graphics.polygon(
-            (pos, points[len(points) - 1], points[0]),
-            color + (50, ),
-            surf = surf
-        );
+        graphics.polygon(points, color + (50, ), surf = surf);
         
         surf.blit(
             this.gradient, (pos.x - RESOLUTION.x, 
