@@ -414,7 +414,6 @@ new class Game {
                             this.bonus = None;
 
                             this.__customPadCnt = BONUS_EFFECT_DUR;
-                            new dynamic xPos = this.player.pos.x + PLAYER_SIZE // 2;
 
                             this.player.pos = CENTER.copy();
 
