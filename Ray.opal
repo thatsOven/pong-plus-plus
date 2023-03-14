@@ -2,6 +2,7 @@ new class Ray {
     new method __init__(pos, dir) {
         this.pos = pos;
         this.dir = Vector().fromAngle(dir);
+        this.angle = dir;
     }
     
     new method cast(wall) {

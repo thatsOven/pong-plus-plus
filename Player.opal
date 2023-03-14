@@ -3,35 +3,10 @@ new class Player {
         this.__reset();
         this.explosion = Explosion(this.pos);
 
-        this.resetRays();
-
         this.gradient = graphics.loadImage(
             os.path.join(HOME_DIR, "gradient.png"),
             RESOLUTION * 2
         );
-    }
-
-    new method resetRays() {
-        this.rays = [];
-        for i in range(RAYS_QTY) {
-            this.rays.append(Ray(this.pos + PLAYER_SIZE_VEC // 2, math.radians(i * (360 / RAYS_QTY))));
-        }
-    }
-
-    new method __updateRays() {
-        for i in range(len(this.rays)) {
-            this.rays[i].pos = this.pos + PLAYER_SIZE_VEC // 2;
-        }
-    }   
-
-    property pos {
-        set {
-            this.__pos = value;
-            this.__updateRays();
-        }
-        get {
-            return this.__pos;
-        }
     }
 
     new method __reset() {
@@ -40,11 +15,13 @@ new class Player {
         this.count    = 0;
         this.playing  = False;
         this.dead     = False;
-        this.__pos    = CENTER.copy() - PLAYER_SIZE_VEC // 2;
+        this.pos      = CENTER.copy() - PLAYER_SIZE_VEC // 2;
         this.velocity = Vector();
 
         this.__rainbow    = False;
         this.__rainbowCnt = 0;
+
+        this.__lightSurf = None;
 
         this.sprinting = False;
     }
@@ -116,15 +93,26 @@ new class Player {
     }
 
     new method look(walls) {
-        new dynamic points = [],
+        new dynamic rays   = [],
+                    points = [],
                     pos    = this.pos + PLAYER_SIZE_VEC // 2;
 
-        for i = 0; i < len(this.rays); i++ {
+        for wall in walls {
+            new dynamic heading = Vector(wall.a.x - pos.x, wall.a.y - pos.y).heading();
+
+            rays.append(Ray(pos, heading));
+            rays.append(Ray(pos, heading + RAY_ANGLE_OFFSET));
+            rays.append(Ray(pos, heading - RAY_ANGLE_OFFSET));
+        }
+
+        rays.sort(key = lambda x: x.angle);
+
+        for ray in rays {
             new dynamic closest = None;
             new float    record = sys.maxsize;
 
-            for j = 0; j < len(walls); j++ {
-                new dynamic pt = this.rays[i].cast(walls[j]);
+            for wall in walls {
+                new dynamic pt = ray.cast(wall);
                 if pt is not None {
                     new float d = pos.distance(pt);
 
@@ -159,8 +147,14 @@ new class Player {
             pos.y - RESOLUTION.y),
             special_flags = BLEND_RGBA_MULT
         );
-    
-        graphics.blitSurf(surf, Vector());
+
+        this.__lightSurf = surf;
+    }
+
+    new method showLight() {
+        if this.__lightSurf is not None {
+            graphics.blitSurf(this.__lightSurf, Vector());
+        }
     }
 
     new method update() {
@@ -171,7 +165,6 @@ new class Player {
             if this.playing {
                 if this.sprinting {
                     this.pos.x += SPRINT_VELOCITY * this.__getDir();
-                    this.__updateRays();
                 } else {
                     this.velocity += GRAVITY;
                     this.pos += this.velocity;

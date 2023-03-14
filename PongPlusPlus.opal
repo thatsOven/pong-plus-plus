@@ -70,11 +70,11 @@ new int PLAYER_SIZE           = 20,
         SPRINT_COOLDOWN       = 30,
         HIT_COOLDOWN          = 5,
         LIGHTNING_SIZE        = 28,
-        RAYS_QTY              = 360,
-        BENCH_FRAMES          = 1000,
-        MAX_RAYS              = 3600,
-        MIN_RAYS              = 36,
-        FLYING_CHANGE_EACH    = 10;
+        UPDATE_RAYS_EACH      = 1,
+        MAX_UPDATES           = 1,
+        MIN_UPDATES           = 20,
+        FLYING_CHANGE_EACH    = 10,
+        BENCH_FRAMES          = 1000;
 
 new float JUMP_VELOCITY                = 10,
           PARTICLE_VELOCITY_MULTIPLIER = 0.98,
@@ -82,7 +82,8 @@ new float JUMP_VELOCITY                = 10,
           HOVER_AMPLITUDE              = 20,
           HOVER_ANGLE_INCREMENT        = 0.02,
           BONUS_ANGLE_INCREMENT        = 0.05,
-          RAINBOW_DELTA                = 0.01;
+          RAINBOW_DELTA                = 0.01,
+          RAY_ANGLE_OFFSET             = 0.00001;
 
 new int HALF_BONUS_SIZE = BONUS_SIZE // 2;
 
@@ -361,19 +362,23 @@ new class Game {
             );
 
             if this.__color and RAYCASTING {
-                new dynamic walls = this.walls.copy();
+                if this.__dayCounter % UPDATE_RAYS_EACH == 0 {
+                    new dynamic walls = this.walls.copy();
 
-                if this.customLeftPad is not None and this.customRightPad is not None {
-                    walls += this.customLeftPad.boundaries + this.customRightPad.boundaries;
-                } else {
-                    walls += this.leftPad.boundaries + this.rightPad.boundaries;
+                    if this.customLeftPad is not None and this.customRightPad is not None {
+                        walls += this.customLeftPad.boundaries + this.customRightPad.boundaries;
+                    } else {
+                        walls += this.leftPad.boundaries + this.rightPad.boundaries;
+                    }
+                    
+                    for obstacle in this.obstacles {
+                        walls += obstacle.boundaries;
+                    }
+
+                    this.player.look(walls);
                 }
                 
-                for obstacle in this.obstacles {
-                    walls += obstacle.boundaries;
-                }
-
-                this.player.look(walls);
+                this.player.showLight();
             }   
 
             if this.__color {
@@ -505,7 +510,7 @@ new class Game {
 
     new method __benchmark(step, spacing) {
         new function benchmark() {
-            global RAYCASTING, RAYS_QTY;
+            global RAYCASTING, UPDATE_RAYS_EACH;
 
             graphics.simpleText(str(this.__currFrame), Vector(CENTER.x, 5 * (CENTER.y // 3)), FG, True, True);
             graphics.fillAlpha(BG, this.__alphaChange);
@@ -523,19 +528,25 @@ new class Game {
             );
 
             if RAYCASTING {
-                new dynamic walls = this.walls.copy();
+                if this.__currFrame % UPDATE_RAYS_EACH == 0 {
+                    IO.out(this.__currFrame, IO.endl);
+                    IO.out(UPDATE_RAYS_EACH, IO.endl);
+                    new dynamic walls = this.walls.copy();
 
-                walls += this.leftPad.boundaries + this.rightPad.boundaries;
+                    walls += this.leftPad.boundaries + this.rightPad.boundaries;
 
-                if this.leftFlying is not None and this.rightFlying is not None {
-                    walls += this.leftFlying.boundaries + this.rightFlying.boundaries;
+                    if this.leftFlying is not None and this.rightFlying is not None {
+                        walls += this.leftFlying.boundaries + this.rightFlying.boundaries;
+                    }
+                    
+                    for obstacle in this.obstacles {
+                        walls += obstacle.boundaries;
+                    }
+
+                    this.player.look(walls);
                 }
                 
-                for obstacle in this.obstacles {
-                    walls += obstacle.boundaries;
-                }
-
-                this.player.look(walls);
+                this.player.showLight();
             }   
 
             graphics.blitSurf(this.__lightning0, LIGHTNING_POS);
@@ -584,23 +595,22 @@ new class Game {
                     new dynamic settings;
                     with open(os.path.join(HOME_DIR, "settings.json"), "w") as settings {
                         settings.write(json.dumps({
-                            "framerate":  FRAMERATE,
-                            "raycasting": RAYCASTING,
-                            "rays":       RAYS_QTY
+                            "framerate":   FRAMERATE,
+                            "raycasting":  RAYCASTING,
+                            "update-each": UPDATE_RAYS_EACH
                         }));
                     }
                     
                     quit;
                 } elif fps > FRAMERATE and RAYCASTING {
-                    this.__minRays = RAYS_QTY;
-                    RAYS_QTY = (RAYS_QTY + this.__maxRays) // 2;
-                    this.player.resetRays();
-                } elif RAYS_QTY <= MIN_RAYS + 1 {
-                    RAYCASTING = False;
+                    this.__minUpdates = UPDATE_RAYS_EACH;
+                    UPDATE_RAYS_EACH  = (UPDATE_RAYS_EACH + this.__maxUpdates) // 2;
+                } elif UPDATE_RAYS_EACH >= MIN_UPDATES {
+                    UPDATE_RAYS_EACH = 1;
+                    RAYCASTING       = False;
                 } else {
-                    this.__maxRays = RAYS_QTY;
-                    RAYS_QTY = (RAYS_QTY + this.__minRays) // 2;
-                    this.player.resetRays();
+                    this.__maxUpdates = UPDATE_RAYS_EACH;
+                    UPDATE_RAYS_EACH  = (UPDATE_RAYS_EACH + this.__minUpdates) // 2;
                 }
             } 
         }
@@ -612,8 +622,8 @@ new class Game {
         this.__fps       = 0;
         this.__currFrame = 0;
 
-        this.__maxRays = MAX_RAYS;
-        this.__minRays = MIN_RAYS;
+        this.__maxUpdates = MAX_UPDATES;
+        this.__minUpdates = MIN_UPDATES;
 
         new dynamic origStep = Vector(RESOLUTION.x // 8, RESOLUTION.y // 8),
                     step     = origStep.copy(),
@@ -659,9 +669,9 @@ main {
     with open(os.path.join(HOME_DIR, "settings.json"), "r") as settings {
         new dynamic sets = json.load(settings);
 
-        FRAMERATE  = sets["framerate"];
-        RAYCASTING = sets["raycasting"];
-        RAYS_QTY   = sets["rays"];
+        FRAMERATE        = sets["framerate"];
+        RAYCASTING       = sets["raycasting"];
+        UPDATE_RAYS_EACH = sets["update-each"];
     }
 
     if "--bench" in sys.argv {
