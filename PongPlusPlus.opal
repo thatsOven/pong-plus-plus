@@ -529,8 +529,6 @@ new class Game {
 
             if RAYCASTING {
                 if this.__currFrame % UPDATE_RAYS_EACH == 0 {
-                    IO.out(this.__currFrame, IO.endl);
-                    IO.out(UPDATE_RAYS_EACH, IO.endl);
                     new dynamic walls = this.walls.copy();
 
                     walls += this.leftPad.boundaries + this.rightPad.boundaries;
