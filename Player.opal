@@ -100,7 +100,6 @@ new class Player {
         for wall in walls {
             new dynamic heading = Vector(wall.a.x - pos.x, wall.a.y - pos.y).heading();
 
-            rays.append(Ray(pos, heading));
             rays.append(Ray(pos, heading + RAY_ANGLE_OFFSET));
             rays.append(Ray(pos, heading - RAY_ANGLE_OFFSET));
         }
