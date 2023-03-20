@@ -58,13 +58,13 @@ new class Pad {
     }
 
     new method update() {
-        this.pos.y += this.__step;
+        this.pos.y += this.__step * frameMultiplier;
         this.pos.y = int(this.pos.y);
 
         this.__computeBounds();
 
-        this.__cnt++;
-        if this.__cnt == EFFECTIVE_PAD_FRMT {
+        this.__cnt += frameMultiplier;
+        if this.__cnt >= EFFECTIVE_PAD_FRMT {
             this.__step = 0;
         }
 

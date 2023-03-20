@@ -28,14 +28,14 @@ new class Bonus : Obstacle {
         pt2.x += sideSize;
 
         graphics.polygon((pt1, this.__pts[0], pt2, this.__pts[1]), hsvToRgb(this.__colorCnt));
-        this.alpha--;
-
-        this.__colorCnt += RAINBOW_DELTA;
+        this.alpha -= frameMultiplier;
+        
+        this.__colorCnt += RAINBOW_DELTA * frameMultiplier;
         if this.__colorCnt > 1 {
             this.__colorCnt = 0;
         }
 
-        this.__angle += BONUS_ANGLE_INCREMENT;
+        this.__angle += BONUS_ANGLE_INCREMENT * frameMultiplier;
 
         if DEBUG_MODE {
             graphics.fastRectangle(this.pos, this.size, HITBOX_COLOR, DEBUG_LINES_WIDTH);

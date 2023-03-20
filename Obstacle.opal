@@ -35,13 +35,13 @@ new class Obstacle {
     }
 
     new method update() {
-        if this.lifeSpan == 0 {
-            this.step = -OBSTACLE_DELTA_ALPHA;
+        if this.lifeSpan <= 0 {
+            this.step = -OBSTACLE_DELTA_ALPHA * frameMultiplier;
         }
 
         this.alpha = Utils.limitToRange(this.alpha + this.step, 0, 255);
-        graphics.rectangle(this.pos, this.size, FG, alpha = this.alpha);
-        this.lifeSpan--;
+        graphics.rectangle(this.pos, this.size, FG, alpha = int(this.alpha));
+        this.lifeSpan -= frameMultiplier;
 
         if DEBUG_MODE {
             graphics.fastRectangle(this.pos, this.size, HITBOX_COLOR, DEBUG_LINES_WIDTH);
@@ -49,6 +49,8 @@ new class Obstacle {
     }
 
     new method collides(player) {
+        this.pos = this.pos.getIntCoords();
+        
         new dynamic yr = range(this.pos.y, this.pos.y + this.size.y),
                     xr = range(this.pos.x, this.pos.x + this.size.x);
 

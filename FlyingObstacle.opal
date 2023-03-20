@@ -113,7 +113,7 @@ new class FlyingObstacle : Obstacle {
 
         match this.mode {
             case FlyingObstacle.LEFT {
-                this.pos.x += this.velocity;
+                this.pos.x += this.velocity * frameMultiplier;
 
                 pt1 = this.pos.copy();
                 pt1.y += this.size.y;
@@ -124,7 +124,7 @@ new class FlyingObstacle : Obstacle {
                 graphics.polygon((this.pos, pt1, pt2), FG);
             }
             case FlyingObstacle.RIGHT {
-                this.pos.x -= this.velocity;
+                this.pos.x -= this.velocity * frameMultiplier;
 
                 pt1 = this.pos.copy();
                 pt2 = this.pos.copy();
@@ -135,7 +135,7 @@ new class FlyingObstacle : Obstacle {
                 graphics.polygon((pt1, pt2, this.pos + this.size), FG);
             }
             case FlyingObstacle.TOP {
-                this.pos.y += this.velocity;
+                this.pos.y += this.velocity * frameMultiplier;
 
                 pt1 = this.pos.copy();
                 pt1.x += this.size.x;
@@ -146,7 +146,7 @@ new class FlyingObstacle : Obstacle {
                 graphics.polygon((this.pos, pt1, pt2), FG);
             }
             case FlyingObstacle.BOTTOM {
-                this.pos.y -= this.velocity;
+                this.pos.y -= this.velocity * frameMultiplier;
 
                 pt1 = this.pos.copy();
                 pt2 = this.pos.copy();

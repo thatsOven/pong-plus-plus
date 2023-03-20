@@ -1,4 +1,5 @@
 package opal:     import *;
+package time:     import time;
 package random:   import uniform, randint;
 package pygame:   import mixer, Surface;
 package colorsys: import hsv_to_rgb;
@@ -29,7 +30,9 @@ new <Vector> GRAVITY             = Vector(0, 0.6),
 new int PLAYER_SIZE           = 20,
         PAD_WALL_DISTANCE     = 40,
         FRAMERATE             = 60,
+        DEFAULT_FRAMERATE     = 60,
         PAD_MOVE_SPEED_MLT    = 3,
+        DEFAULT_TOLERANCE     = 15,
         TOLERANCE             = 15,
         ALPHA_CHANGE          = 100,
         BONUS_ALPHA_CHANGE    = 25,
@@ -87,7 +90,8 @@ new float JUMP_VELOCITY                = 10,
 
 new int HALF_BONUS_SIZE = BONUS_SIZE // 2;
 
-new float EFFECTIVE_PAD_FRMT = FRAMERATE / PAD_MOVE_SPEED_MLT;
+new float EFFECTIVE_PAD_FRMT = DEFAULT_FRAMERATE / PAD_MOVE_SPEED_MLT,
+          frameMultiplier    = 1;
 
 new <Vector> PLAYER_SIZE_VEC     = Vector(PLAYER_SIZE, PLAYER_SIZE),
              START_TEXT_POS      = Vector(RESOLUTION.x // 2, RESOLUTION.y // 4),
@@ -174,6 +178,8 @@ new class Game {
 
         this.__sprintCooldown = SPRINT_COOLDOWN;
         this.__hitCooldown    = HIT_COOLDOWN;
+
+        this.__lastTime = time();
     }
 
     new method __reset() {
@@ -334,7 +340,16 @@ new class Game {
     }
 
     new method update() {
-        global BG, FG;
+        global BG, FG, TOLERANCE, frameMultiplier;
+
+        frameMultiplier = (time() - this.__lastTime) * DEFAULT_FRAMERATE;
+        this.__lastTime = time();
+
+        if frameMultiplier > 1 {
+            TOLERANCE = DEFAULT_TOLERANCE * frameMultiplier;
+        } else {
+            TOLERANCE = DEFAULT_TOLERANCE;
+        }
 
         if this.player.playing {
             graphics.simpleText(str(this.player.count), CENTER, FG, True, True);
@@ -362,7 +377,7 @@ new class Game {
             );
 
             if this.__color and RAYCASTING {
-                if this.__dayCounter % UPDATE_RAYS_EACH == 0 {
+                if int(this.__dayCounter) % UPDATE_RAYS_EACH == 0 {
                     new dynamic walls = this.walls.copy();
 
                     if this.customLeftPad is not None and this.customRightPad is not None {
@@ -388,7 +403,7 @@ new class Game {
             }
 
             if this.customLeftPad is not None and this.customRightPad is not None {
-                if this.__customPadCnt == 0 {
+                if this.__customPadCnt <= 0 {
                     this.player.rainbowOff();
                     this.__resetCustomPads();
                 } else {
@@ -399,7 +414,7 @@ new class Game {
                         this.__invert();
                     }
 
-                    this.__customPadCnt--;
+                    this.__customPadCnt -= frameMultiplier;
                 }
             } else {
                 this.leftPad.update();
@@ -464,28 +479,28 @@ new class Game {
 
             if not this.player.sprinting {
                 if this.__sprintAmt < SPRINT_MAX_VALUE {
-                    this.__sprintAmt += SPRINT_CHARGE_DELTA;
+                    this.__sprintAmt += SPRINT_CHARGE_DELTA * frameMultiplier;
                 }
             } else {
                 graphics.translate(Vector(randint(-SHAKE, SHAKE), randint(-SHAKE, SHAKE)));
 
                 if this.__sprintAmt > 0 {
-                    this.__sprintAmt -= SPRINT_USE_DELTA;
+                    this.__sprintAmt -= SPRINT_USE_DELTA * frameMultiplier;
                 } else {
                     this.__playerSprintOff();
                 }
             }
 
-            this.__sprintCooldown++;
-            this.__hitCooldown++;
+            this.__sprintCooldown += frameMultiplier;
+            this.__hitCooldown    += frameMultiplier;
         } elif not this.player.explosion.isAlive() {
             graphics.simpleText("JUMP TO START", START_TEXT_POS, FG, True, True);
         }
 
         this.player.update();
 
-        this.__dayCounter++;
-        if this.__dayCounter == DAY_CYCLE {
+        this.__dayCounter += frameMultiplier;
+        if this.__dayCounter >= DAY_CYCLE {
             this.__dayCounter = 0;
             unchecked: BG, FG = FG, BG;
 

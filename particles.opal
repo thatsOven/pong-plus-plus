@@ -16,7 +16,7 @@ new class Particle {
 
     new method update() {
         this.velocity *= PARTICLE_VELOCITY_MULTIPLIER;
-        this.lifeSpan -= LIFESPAN_DECREASE;
+        this.lifeSpan -= LIFESPAN_DECREASE * frameMultiplier;
 
         this.velocity += this.acceleration;
         this.pos      += this.velocity;
@@ -33,7 +33,7 @@ new class Particle {
     }
 
     new method show() {
-        graphics.circle(this.pos, PARTICLE_SIZE, FG, this.lifeSpan);
+        graphics.circle(round(this.pos), PARTICLE_SIZE, FG, int(this.lifeSpan));
     }
 }
 

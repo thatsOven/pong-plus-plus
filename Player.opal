@@ -163,16 +163,18 @@ new class Player {
         } else {
             if this.playing {
                 if this.sprinting {
-                    this.pos.x += SPRINT_VELOCITY * this.__getDir();
+                    this.pos.x += SPRINT_VELOCITY * this.__getDir() * frameMultiplier;
+                    this.pos.x = round(this.pos.x);
                 } else {
-                    this.velocity += GRAVITY;
-                    this.pos += this.velocity;
+                    this.velocity += GRAVITY * frameMultiplier;
+                    this.pos += this.velocity * frameMultiplier;
+                    this.pos = round(this.pos);
                 }
 
                 if this.__rainbow or this.sprinting {
                     graphics.fastRectangle(this.pos, PLAYER_SIZE_VEC, hsvToRgb(this.__rainbowCnt));
 
-                    this.__rainbowCnt += RAINBOW_DELTA;
+                    this.__rainbowCnt += RAINBOW_DELTA * frameMultiplier;
                     if this.__rainbowCnt > 1 {
                         this.__rainbowCnt = 0;
                     }
@@ -183,7 +185,7 @@ new class Player {
                 new dynamic tmpPos = this.pos.copy();
                 tmpPos.y += round(math.sin(this.__hoverAngle) * HOVER_AMPLITUDE);
                 graphics.fastRectangle(tmpPos, PLAYER_SIZE_VEC, FG);
-                this.__hoverAngle += HOVER_ANGLE_INCREMENT;
+                this.__hoverAngle += HOVER_ANGLE_INCREMENT * frameMultiplier;
             }
 
             if DEBUG_MODE {
