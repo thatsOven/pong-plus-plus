@@ -23,7 +23,7 @@ new tuple FG                     = (255, 255, 255),
 new <Vector> GRAVITY             = Vector(0, 0.6),
              PAD_SIZE            = Vector(15, 100),
              PLAYER_VELOCITY     = Vector(5),
-             OBSTACLE_SAFE_ZONE  = Vector(100, 50),
+             OBSTACLE_SAFE_ZONE  = Vector(180, 50),
              SPRINT_LINE_POS     = Vector(40, 40),
              LIGHTNING_LINE_RPOS = Vector(20, 26);
 

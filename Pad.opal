@@ -74,7 +74,7 @@ new class Pad {
             if this.isLeft {
                 new dynamic tmp = Vector(this.pos.x + this.__size.x - TOLERANCE, this.pos.y);
 
-                if this.__size == PAD_SIZE {
+                if this.__size != PAD_SIZE {
                     graphics.fastRectangle(
                         tmp, Vector(TOLERANCE + FLYING_SAFE_ZONE_SIZE, this.__size.y),
                         FLYING_SAFE_ZONE_COLOR, DEBUG_LINES_WIDTH
@@ -86,7 +86,7 @@ new class Pad {
                     HITBOX_COLOR, DEBUG_LINES_WIDTH
                 );
             } else {
-                if this.__size == PAD_SIZE {
+                if this.__size != PAD_SIZE {
                     graphics.fastRectangle(
                         Vector(this.pos.x - FLYING_SAFE_ZONE_SIZE, this.pos.y),
                         Vector(FLYING_SAFE_ZONE_SIZE, this.__size.y),
