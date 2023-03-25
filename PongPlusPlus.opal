@@ -17,7 +17,6 @@ new tuple FG                     = (255, 255, 255),
           HITBOX_COLOR           = (255,   0,   0),
           INFO_COLOR             = (  0,   0, 255),
           SAFE_ZONE_COLOR        = (  0, 255,   0),
-          FLYING_SAFE_ZONE_COLOR = (255, 255,   0),
           RAY_COLOR              = (255, 143, 246);
 
 new <Vector> GRAVITY             = Vector(0, 0.6),
@@ -61,7 +60,6 @@ new int PLAYER_SIZE           = 20,
         PLAYER_COUNT_BONUS    = 20,
         BONUS_PAD_DISTANCE    = 100,
         BONUS_PAD_Y_DIST      = 50,
-        FLYING_SAFE_ZONE_SIZE = 100,
         SPRINT_CHARGE_DELTA   = 1,
         SPRINT_MAX_VALUE      = 900,
         SPRINT_USE_DELTA      = 10,
@@ -217,27 +215,13 @@ new class Game {
         return tmp;
     }
 
-    new method isPlayerInFlyingSafeLeft() {
-        return (this.leftPad.pos.x < this.player.pos.x < this.leftPad.pos.x + FLYING_SAFE_ZONE_SIZE and
-                this.leftPad.pos.y < this.player.pos.y < this.leftPad.pos.y + PAD_SIZE) or
-               (this.leftPad.pos.x < this.player.pos.x + PLAYER_SIZE < this.leftPad.pos.x + FLYING_SAFE_ZONE_SIZE and
-                this.leftPad.pos.y < this.player.pos.y + PLAYER_SIZE < this.leftPad.pos.y + PAD_SIZE);
-    }
-
-    new method isPlayerInFlyingSafeRight() {
-        return (this.rightPad.pos.x - FLYING_SAFE_ZONE_SIZE < this.player.pos.x < this.rightPad.pos.x and
-                this.rightPad.pos.y < this.player.pos.y < this.rightPad.pos.y + PAD_SIZE) or
-               (this.rightPad.pos.x - FLYING_SAFE_ZONE_SIZE < this.player.pos.x + PLAYER_SIZE < this.rightPad.pos.x and
-                this.rightPad.pos.y < this.player.pos.y + PLAYER_SIZE < this.rightPad.pos.y + PAD_SIZE);
-    }
-
     new method getFlyingSafePos() {
         new dynamic mode = randint(0, 3);
 
         match mode {
             case FlyingObstacle.LEFT {
-                if (this.customLeftPad is None and this.customRightPad is None) or this.isPlayerInFlyingSafeLeft() {
-                    if randint(0, 1) == 0 {
+                if this.customLeftPad is None and this.customRightPad is None {
+                    if randint(0, 1) == 0 and OBSTACLE_SAFE_ZONE.y < this.leftPad.pos.y {
                         return Vector(0, randint(OBSTACLE_SAFE_ZONE.y, this.leftPad.pos.y)), mode;
                     } else {
                         return Vector(0, randint(this.leftPad.pos.y + PAD_SIZE.y, RESOLUTION.y - OBSTACLE_SAFE_ZONE.y)), mode;
@@ -247,8 +231,8 @@ new class Game {
                 }
             }
             case FlyingObstacle.RIGHT {
-                if (this.customLeftPad is None and this.customRightPad is None) or this.isPlayerInFlyingSafeRight() {
-                    if randint(0, 1) == 0 {
+                if this.customLeftPad is None and this.customRightPad is None {
+                    if randint(0, 1) == 0 and OBSTACLE_SAFE_ZONE.y < this.rightPad.pos.y {
                         return Vector(RESOLUTION.x, randint(OBSTACLE_SAFE_ZONE.y, this.rightPad.pos.y)), mode;
                     } else {
                         return Vector(RESOLUTION.x, randint(this.rightPad.pos.y + PAD_SIZE.y, RESOLUTION.y - OBSTACLE_SAFE_ZONE.y)), mode;
