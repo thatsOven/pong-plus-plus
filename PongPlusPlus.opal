@@ -106,14 +106,14 @@ new function hsvToRgb(h, s = 1, v = 1) {
     return tuple(round(i * 255) for i in hsv_to_rgb(h, s, v));
 }
 
-$include os.path.join("HOME_DIR", "particles.opal")
-$include os.path.join("HOME_DIR", "Boundary.opal")
-$include os.path.join("HOME_DIR", "Ray.opal")
-$include os.path.join("HOME_DIR", "Pad.opal")
-$include os.path.join("HOME_DIR", "Player.opal")
-$include os.path.join("HOME_DIR", "Obstacle.opal")
-$include os.path.join("HOME_DIR", "FlyingObstacle.opal")
-$include os.path.join("HOME_DIR", "Bonus.opal")
+$include os.path.join(HOME_DIR, "particles.opal")
+$include os.path.join(HOME_DIR, "Boundary.opal")
+$include os.path.join(HOME_DIR, "Ray.opal")
+$include os.path.join(HOME_DIR, "Pad.opal")
+$include os.path.join(HOME_DIR, "Player.opal")
+$include os.path.join(HOME_DIR, "Obstacle.opal")
+$include os.path.join(HOME_DIR, "FlyingObstacle.opal")
+$include os.path.join(HOME_DIR, "Bonus.opal")
 
 new class Game {
     new method __init__() {
