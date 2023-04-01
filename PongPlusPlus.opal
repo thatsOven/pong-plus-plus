@@ -5,7 +5,7 @@ package pygame:   import mixer, Surface;
 package colorsys: import hsv_to_rgb;
 import math, os, sys, json;
 
-new <Vector> RESOLUTION = Vector(1280, 720);
+new Vector RESOLUTION = Vector(1280, 720);
 
 new bool DEBUG_MODE = False,
          RAYCASTING = True;
@@ -19,12 +19,12 @@ new tuple FG                     = (255, 255, 255),
           SAFE_ZONE_COLOR        = (  0, 255,   0),
           RAY_COLOR              = (255, 143, 246);
 
-new <Vector> GRAVITY             = Vector(0, 0.6),
-             PAD_SIZE            = Vector(15, 100),
-             PLAYER_VELOCITY     = Vector(5),
-             OBSTACLE_SAFE_ZONE  = Vector(180, 50),
-             SPRINT_LINE_POS     = Vector(40, 40),
-             LIGHTNING_LINE_RPOS = Vector(20, 26);
+new Vector GRAVITY             = Vector(0, 0.6),
+           PAD_SIZE            = Vector(15, 100),
+           PLAYER_VELOCITY     = Vector(5),
+           OBSTACLE_SAFE_ZONE  = Vector(180, 50),
+           SPRINT_LINE_POS     = Vector(40, 40),
+           LIGHTNING_LINE_RPOS = Vector(20, 26);
 
 new int PLAYER_SIZE           = 20,
         PAD_WALL_DISTANCE     = 40,
@@ -91,16 +91,16 @@ new int HALF_BONUS_SIZE = BONUS_SIZE // 2;
 new float EFFECTIVE_PAD_FRMT = DEFAULT_FRAMERATE / PAD_MOVE_SPEED_MLT,
           frameMultiplier    = 1;
 
-new <Vector> PLAYER_SIZE_VEC     = Vector(PLAYER_SIZE, PLAYER_SIZE),
-             START_TEXT_POS      = Vector(RESOLUTION.x // 2, RESOLUTION.y // 4),
-             CENTER              = RESOLUTION // 2,
-             BONUS_SIZE_VEC      = Vector(BONUS_SIZE, BONUS_SIZE),
-             HALF_BONUS_SIZE_VEC = BONUS_SIZE_VEC // 2,
-             BONUS_PAD_SIZE      = Vector(PAD_SIZE.x, RESOLUTION.y - BONUS_PAD_Y_DIST * 2),
-             LIGHTNING_SIZE_VEC  = Vector(LIGHTNING_SIZE, LIGHTNING_SIZE),
-             LIGHTNING_POS       = Vector(SPRINT_LINE_POS.x + SPRINT_LINE_LENGTH + LIGHTNING_LINE_RPOS.x, LIGHTNING_LINE_RPOS.y);
+new Vector PLAYER_SIZE_VEC     = Vector(PLAYER_SIZE, PLAYER_SIZE),
+           START_TEXT_POS      = Vector(RESOLUTION.x // 2, RESOLUTION.y // 4),
+           CENTER              = RESOLUTION // 2,
+           BONUS_SIZE_VEC      = Vector(BONUS_SIZE, BONUS_SIZE),
+           HALF_BONUS_SIZE_VEC = BONUS_SIZE_VEC // 2,
+           BONUS_PAD_SIZE      = Vector(PAD_SIZE.x, RESOLUTION.y - BONUS_PAD_Y_DIST * 2),
+           LIGHTNING_SIZE_VEC  = Vector(LIGHTNING_SIZE, LIGHTNING_SIZE),
+           LIGHTNING_POS       = Vector(SPRINT_LINE_POS.x + SPRINT_LINE_LENGTH + LIGHTNING_LINE_RPOS.x, LIGHTNING_LINE_RPOS.y);
 
-new <Graphics> graphics = Graphics(RESOLUTION, FRAMERATE, caption = "Pong++", showFps = True);
+new Graphics graphics = Graphics(RESOLUTION, FRAMERATE, caption = "Pong++", showFps = True);
 
 new function hsvToRgb(h, s = 1, v = 1) {
     return tuple(round(i * 255) for i in hsv_to_rgb(h, s, v));
