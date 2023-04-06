@@ -4,6 +4,7 @@ package random:   import uniform, randint;
 package pygame:   import mixer, Surface;
 package colorsys: import hsv_to_rgb;
 import math, os, sys, json;
+$args ["--nostatic"]
 
 new Vector RESOLUTION = Vector(1280, 720);
 
@@ -26,70 +27,72 @@ new Vector GRAVITY             = Vector(0, 0.6),
            SPRINT_LINE_POS     = Vector(40, 40),
            LIGHTNING_LINE_RPOS = Vector(20, 26);
 
-new int PLAYER_SIZE           = 20,
-        PAD_WALL_DISTANCE     = 40,
-        FRAMERATE             = 60,
-        DEFAULT_FRAMERATE     = 60,
-        PAD_MOVE_SPEED_MLT    = 3,
-        DEFAULT_TOLERANCE     = 15,
-        TOLERANCE             = 15,
-        ALPHA_CHANGE          = 100,
-        BONUS_ALPHA_CHANGE    = 25,
-        LIFESPAN_DECREASE     = 3,
-        PARTICLE_SIZE         = 1,
-        MIN_PARTICLE_QTY      = 25,
-        MAX_PARTICLE_QTY      = 50,
-        DAY_CYCLE             = 7200,
-        MIN_OBSTACLE_SIZE     = 15,
-        MAX_OBSTACLE_SIZE     = 40,
-        MIN_OBSTACLE_LIFE     = 300,
-        MAX_OBSTACLE_LIFE     = 900,
-        OBSTACLE_START_ALPHA  = 30,
-        OBSTACLE_DELTA_ALPHA  = 5,
-        PLAYER_COUNT_OBST     = 10,
-        PLAYER_SAFE_ZONE      = 40,
-        MOD_INCREMENT_DIFF    = 5,
-        MIN_FLYINGOBST_SPEED  = 5,
-        MAX_FLYINGOBST_SPEED  = 15,
-        START_DIFFICULTY      = 0,
-        DEBUG_LINES_WIDTH     = 1,
-        DEBUG_VELOCITY_LEN    = 40,
-        BONUS_SIZE            = 20,
-        BONUS_LIFE            = 150,
-        BONUS_EFFECT_DUR      = 200,
-        PLAYER_COUNT_BONUS    = 20,
-        BONUS_PAD_DISTANCE    = 100,
-        BONUS_PAD_Y_DIST      = 50,
-        SPRINT_CHARGE_DELTA   = 1,
-        SPRINT_MAX_VALUE      = 900,
-        SPRINT_USE_DELTA      = 10,
-        SPRINT_VELOCITY       = 15,
-        SPRINT_ALPHA_CHANGE   = 40,
-        SHAKE                 = 2,
-        SPRINT_LINE_LENGTH    = 200,
-        SPRINT_LINE_WIDTH     = 4,
-        SPRINT_COOLDOWN       = 30,
-        HIT_COOLDOWN          = 5,
-        LIGHTNING_SIZE        = 28,
-        UPDATE_RAYS_EACH      = 1,
-        MAX_UPDATES           = 1,
-        MIN_UPDATES           = 20,
-        FLYING_CHANGE_EACH    = 10,
-        BENCH_FRAMES          = 1000;
+static {
+    new int PLAYER_SIZE           = 20,
+            PAD_WALL_DISTANCE     = 40,
+            FRAMERATE             = 60,
+            DEFAULT_FRAMERATE     = 60,
+            PAD_MOVE_SPEED_MLT    = 3,
+            DEFAULT_TOLERANCE     = 15,
+            TOLERANCE             = 15,
+            ALPHA_CHANGE          = 100,
+            BONUS_ALPHA_CHANGE    = 25,
+            LIFESPAN_DECREASE     = 3,
+            PARTICLE_SIZE         = 1,
+            MIN_PARTICLE_QTY      = 25,
+            MAX_PARTICLE_QTY      = 50,
+            DAY_CYCLE             = 7200,
+            MIN_OBSTACLE_SIZE     = 15,
+            MAX_OBSTACLE_SIZE     = 40,
+            MIN_OBSTACLE_LIFE     = 300,
+            MAX_OBSTACLE_LIFE     = 900,
+            OBSTACLE_START_ALPHA  = 30,
+            OBSTACLE_DELTA_ALPHA  = 5,
+            PLAYER_COUNT_OBST     = 10,
+            PLAYER_SAFE_ZONE      = 40,
+            MOD_INCREMENT_DIFF    = 5,
+            MIN_FLYINGOBST_SPEED  = 5,
+            MAX_FLYINGOBST_SPEED  = 15,
+            START_DIFFICULTY      = 0,
+            DEBUG_LINES_WIDTH     = 1,
+            DEBUG_VELOCITY_LEN    = 40,
+            BONUS_SIZE            = 20,
+            BONUS_LIFE            = 150,
+            BONUS_EFFECT_DUR      = 200,
+            PLAYER_COUNT_BONUS    = 20,
+            BONUS_PAD_DISTANCE    = 100,
+            BONUS_PAD_Y_DIST      = 50,
+            SPRINT_CHARGE_DELTA   = 1,
+            SPRINT_MAX_VALUE      = 900,
+            SPRINT_USE_DELTA      = 10,
+            SPRINT_VELOCITY       = 15,
+            SPRINT_ALPHA_CHANGE   = 40,
+            SHAKE                 = 2,
+            SPRINT_LINE_LENGTH    = 200,
+            SPRINT_LINE_WIDTH     = 4,
+            SPRINT_COOLDOWN       = 30,
+            HIT_COOLDOWN          = 5,
+            LIGHTNING_SIZE        = 28,
+            UPDATE_RAYS_EACH      = 1,
+            MAX_UPDATES           = 1,
+            MIN_UPDATES           = 20,
+            FLYING_CHANGE_EACH    = 10,
+            BENCH_FRAMES          = 1000;
 
-new float JUMP_VELOCITY                = 10,
-          PARTICLE_VELOCITY_MULTIPLIER = 0.98,
-          PARTICLE_MAX_INIT_VELOCITY   = 5,
-          HOVER_AMPLITUDE              = 20,
-          HOVER_ANGLE_INCREMENT        = 0.02,
-          BONUS_ANGLE_INCREMENT        = 0.05,
-          RAINBOW_DELTA                = 0.01,
-          RAY_ANGLE_OFFSET             = 0.00001;
+    new float JUMP_VELOCITY                = 10,
+              PARTICLE_VELOCITY_MULTIPLIER = 0.98,
+              PARTICLE_MAX_INIT_VELOCITY   = 5,
+              HOVER_AMPLITUDE              = 20,
+              HOVER_ANGLE_INCREMENT        = 0.02,
+              BONUS_ANGLE_INCREMENT        = 0.05,
+              RAINBOW_DELTA                = 0.01,
+              RAY_ANGLE_OFFSET             = 0.00001;
 
-new int HALF_BONUS_SIZE = BONUS_SIZE // 2;
+    new int HALF_BONUS_SIZE = BONUS_SIZE // 2;
 
-new float EFFECTIVE_PAD_FRMT = DEFAULT_FRAMERATE / PAD_MOVE_SPEED_MLT,
-          frameMultiplier    = 1;
+    new float EFFECTIVE_PAD_FRMT = DEFAULT_FRAMERATE / PAD_MOVE_SPEED_MLT,
+              frameMultiplier    = 1;
+}
 
 new Vector PLAYER_SIZE_VEC     = Vector(PLAYER_SIZE, PLAYER_SIZE),
            START_TEXT_POS      = Vector(RESOLUTION.x // 2, RESOLUTION.y // 4),
@@ -102,8 +105,8 @@ new Vector PLAYER_SIZE_VEC     = Vector(PLAYER_SIZE, PLAYER_SIZE),
 
 new Graphics graphics = Graphics(RESOLUTION, FRAMERATE, caption = "Pong++", showFps = True);
 
-new function hsvToRgb(h, s = 1, v = 1) {
-    return tuple(round(i * 255) for i in hsv_to_rgb(h, s, v));
+new function hsvToRgb(h: double) tuple {
+    return tuple(round(i * 255) for i in hsv_to_rgb(h, 1, 1));
 }
 
 $include os.path.join(HOME_DIR, "particles.opal")
@@ -330,7 +333,7 @@ new class Game {
         this.__lastTime = time();
 
         if frameMultiplier > 1 {
-            TOLERANCE = DEFAULT_TOLERANCE * frameMultiplier;
+            TOLERANCE = int(DEFAULT_TOLERANCE * frameMultiplier);
         } else {
             TOLERANCE = DEFAULT_TOLERANCE;
         }
@@ -632,7 +635,7 @@ new class Game {
         this.obstacles = [];
         while not pos == origStep {
             this.obstacles.append(Obstacle(pos.copy()));
-            this.obstacles[-1].lifeSpan = -1;
+            this.obstacles[-1].lifeSpan = None;
             pos.x += step.x;
 
             if pos.x >= origStep.x {

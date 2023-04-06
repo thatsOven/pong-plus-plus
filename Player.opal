@@ -97,8 +97,10 @@ new class Player {
                     points = [],
                     pos    = this.pos + PLAYER_SIZE_VEC // 2;
 
+        static: new float record, d, heading;
+
         for wall in walls {
-            new dynamic heading = Vector(wall.a.x - pos.x, wall.a.y - pos.y).heading();
+            heading = Vector(wall.a.x - pos.x, wall.a.y - pos.y).heading();
 
             rays.append(Ray(pos, heading + RAY_ANGLE_OFFSET));
             rays.append(Ray(pos, heading - RAY_ANGLE_OFFSET));
@@ -108,12 +110,12 @@ new class Player {
 
         for ray in rays {
             new dynamic closest = None;
-            new float    record = sys.maxsize;
+            record = sys.maxsize;
 
             for wall in walls {
                 new dynamic pt = ray.cast(wall);
                 if pt is not None {
-                    new float d = pos.distance(pt);
+                    d = pos.distance(pt);
 
                     if d < record {
                         record  = d;
