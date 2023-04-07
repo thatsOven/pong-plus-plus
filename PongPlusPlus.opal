@@ -110,7 +110,6 @@ new function hsvToRgb(h: double) tuple {
 }
 
 $include os.path.join(HOME_DIR, "particles.opal")
-$include os.path.join(HOME_DIR, "Boundary.opal")
 $include os.path.join(HOME_DIR, "Ray.opal")
 $include os.path.join(HOME_DIR, "Pad.opal")
 $include os.path.join(HOME_DIR, "Player.opal")
