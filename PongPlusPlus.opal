@@ -105,7 +105,7 @@ new Vector PLAYER_SIZE_VEC     = Vector(PLAYER_SIZE, PLAYER_SIZE),
 
 new Graphics graphics = Graphics(RESOLUTION, FRAMERATE, caption = "Pong++", showFps = True);
 
-new function hsvToRgb(h: double) tuple {
+new function hsvToRgb(h) {
     return tuple(round(i * 255) for i in hsv_to_rgb(h, 1, 1));
 }
 
