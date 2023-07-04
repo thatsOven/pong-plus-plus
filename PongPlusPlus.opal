@@ -337,8 +337,17 @@ new class Game {
             TOLERANCE = DEFAULT_TOLERANCE;
         }
 
+        new dynamic offset = Vector(
+            (this.player.pos.x - CENTER.x) / RESOLUTION.x, 
+            (this.player.pos.y - CENTER.y) / RESOLUTION.y
+        );
+
         if this.player.playing {
-            graphics.simpleText(str(this.player.count), CENTER, FG, True, True);
+            graphics.simpleText(
+                str(this.player.count), 
+                CENTER - offset * 25,
+                FG, True, True
+            );
         }
 
         graphics.fillAlpha(BG, this.__alphaChange);
@@ -349,15 +358,17 @@ new class Game {
         }
 
         if this.player.playing {
+            new dynamic lineOffset = offset * 50;
+
             graphics.line(
-                SPRINT_LINE_POS,
+                SPRINT_LINE_POS - lineOffset,
                 Vector(
                     SPRINT_LINE_POS.x + Utils.translate(
                     this.__sprintAmt,
                     0, SPRINT_MAX_VALUE,
                     2, SPRINT_LINE_LENGTH
-                    ),
-                    SPRINT_LINE_POS.y
+                    ) - lineOffset.x,
+                    SPRINT_LINE_POS.y - lineOffset.y
                 ),
                 FG, SPRINT_LINE_WIDTH
             );
@@ -383,9 +394,9 @@ new class Game {
             }   
 
             if this.__color {
-                graphics.blitSurf(this.__lightning0, LIGHTNING_POS);
+                graphics.blitSurf(this.__lightning0, LIGHTNING_POS - lineOffset);
             } else {
-                graphics.blitSurf(this.__lightning1, LIGHTNING_POS);
+                graphics.blitSurf(this.__lightning1, LIGHTNING_POS - lineOffset);
             }
 
             if this.customLeftPad is not None and this.customRightPad is not None {
@@ -463,17 +474,17 @@ new class Game {
                 }
             }
 
-            if not this.player.sprinting {
-                if this.__sprintAmt < SPRINT_MAX_VALUE {
-                    this.__sprintAmt += SPRINT_CHARGE_DELTA * frameMultiplier;
-                }
-            } else {
+            if this.player.sprinting {
                 graphics.translate(Vector(randint(-SHAKE, SHAKE), randint(-SHAKE, SHAKE)));
 
                 if this.__sprintAmt > 0 {
                     this.__sprintAmt -= SPRINT_USE_DELTA * frameMultiplier;
                 } else {
                     this.__playerSprintOff();
+                }
+            } else {
+                if this.__sprintAmt < SPRINT_MAX_VALUE {
+                    this.__sprintAmt += SPRINT_CHARGE_DELTA * frameMultiplier;
                 }
             }
 
@@ -513,17 +524,24 @@ new class Game {
         new function benchmark() {
             global RAYCASTING, UPDATE_RAYS_EACH;
 
-            graphics.simpleText(str(this.__currFrame), Vector(CENTER.x, 5 * (CENTER.y // 3)), FG, True, True);
+            new dynamic offset = Vector(
+                (this.player.pos.x - CENTER.x) / RESOLUTION.x, 
+                (this.player.pos.y - CENTER.y) / RESOLUTION.y
+            );
+
+            graphics.simpleText(str(this.__currFrame), Vector(CENTER.x, 5 * (CENTER.y // 3)) - offset * 25, FG, True, True);
             graphics.fillAlpha(BG, this.__alphaChange);
+
+            new dynamic lineOffset = offset * 50;
             graphics.line(
-                SPRINT_LINE_POS,
+                SPRINT_LINE_POS - lineOffset,
                 Vector(
                     SPRINT_LINE_POS.x + Utils.translate(
                     this.__sprintAmt,
                     0, SPRINT_MAX_VALUE,
                     2, SPRINT_LINE_LENGTH
-                    ),
-                    SPRINT_LINE_POS.y
+                    ) - lineOffset.x,
+                    SPRINT_LINE_POS.y - lineOffset.y
                 ),
                 FG, SPRINT_LINE_WIDTH
             );
@@ -548,7 +566,7 @@ new class Game {
                 this.player.showLight();
             }   
 
-            graphics.blitSurf(this.__lightning0, LIGHTNING_POS);
+            graphics.blitSurf(this.__lightning0, LIGHTNING_POS - lineOffset);
 
             this.leftPad.update();
             this.rightPad.update();
