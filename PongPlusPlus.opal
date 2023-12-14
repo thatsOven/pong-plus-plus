@@ -618,7 +618,7 @@ new class Game {
                         }));
                     }
                     
-                    quit;
+                    sys.exit(0);
                 } elif fps > FRAMERATE and RAYCASTING {
                     this.__minUpdates = UPDATE_RAYS_EACH;
                     UPDATE_RAYS_EACH  = (UPDATE_RAYS_EACH + this.__maxUpdates) // 2;
